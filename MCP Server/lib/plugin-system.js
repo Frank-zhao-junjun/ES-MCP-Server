@@ -1,6 +1,6 @@
 /**
  * MCP Server Plugin System
- * 
+ *
  * Defines interfaces and utilities for plugin-based tool registration
  */
 
@@ -27,43 +27,43 @@ const { z } = require('zod');
 
 /**
  * Validates a plugin definition
- * @param {McpPlugin} plugin 
+ * @param {McpPlugin} plugin
  * @returns {Promise<{valid: boolean, errors: string[]}>}
  */
 async function validatePlugin(plugin) {
     const errors = [];
-    
+
     if (!plugin.id || typeof plugin.id !== 'string') {
         errors.push('Plugin must have a valid id string');
     }
-    
+
     if (!plugin.name || typeof plugin.name !== 'string') {
         errors.push('Plugin must have a valid name string');
     }
-    
+
     if (!plugin.version || typeof plugin.version !== 'string') {
         errors.push('Plugin must have a valid version string');
     }
-    
+
     if (!plugin.description || typeof plugin.description !== 'string') {
         errors.push('Plugin must have a valid description string');
     }
-    
+
     if (!Array.isArray(plugin.tools)) {
         errors.push('Plugin must have a tools array');
     } else {
         for (let i = 0; i < plugin.tools.length; i++) {
             const tool = plugin.tools[i];
             const prefix = `Tool[${i}]`;
-            
+
             if (!tool.name || typeof tool.name !== 'string') {
                 errors.push(`${prefix} must have a valid name string`);
             }
-            
+
             if (!tool.description || typeof tool.description !== 'string') {
                 errors.push(`${prefix} must have a valid description string`);
             }
-            
+
             if (!tool.parameters || typeof tool.parameters !== 'object') {
                 errors.push(`${prefix} must have a valid parameters object`);
             } else {
@@ -74,21 +74,21 @@ async function validatePlugin(plugin) {
                     }
                 }
             }
-            
+
             if (typeof tool.handler !== 'function') {
                 errors.push(`${prefix} must have a valid handler function`);
             }
         }
     }
-    
+
     if (plugin.init && typeof plugin.init !== 'function') {
         errors.push('Plugin init must be a function if provided');
     }
-    
+
     if (plugin.cleanup && typeof plugin.cleanup !== 'function') {
         errors.push('Plugin cleanup must be a function if provided');
     }
-    
+
     return {
         valid: errors.length === 0,
         errors
@@ -107,12 +107,12 @@ class PluginManager {
 
     /**
      * Register a plugin with the server
-     * @param {McpPlugin} plugin 
+     * @param {McpPlugin} plugin
      * @returns {Promise<boolean>} Success status
      */
     async registerPlugin(plugin) {
         const validationResult = await validatePlugin(plugin);
-        
+
         if (!validationResult.valid) {
             console.error(`[plugin-manager] Invalid plugin "${plugin.id}":`, validationResult.errors);
             return false;
@@ -163,13 +163,13 @@ class PluginManager {
             this.loadedTools.set(toolDef.name, plugin.id);
         }
 
-        console.log(`[plugin-manager] Successfully registered plugin "${plugin.id}" with ${plugin.tools.length} tools`);
+        console.error(`[plugin-manager] Successfully registered plugin "${plugin.id}" with ${plugin.tools.length} tools`);
         return true;
     }
 
     /**
      * Unregister a plugin and its tools
-     * @param {string} pluginId 
+     * @param {string} pluginId
      * @returns {Promise<boolean>} Success status
      */
     async unregisterPlugin(pluginId) {
@@ -196,16 +196,16 @@ class PluginManager {
         for (const toolDef of plugin.tools) {
             this.loadedTools.delete(toolDef.name);
         }
-        
+
         this.plugins.delete(pluginId);
 
-        console.log(`[plugin-manager] Unregistered plugin "${pluginId}"`);
+        console.error(`[plugin-manager] Unregistered plugin "${pluginId}"`);
         return true;
     }
 
     /**
      * Get plugin by ID
-     * @param {string} pluginId 
+     * @param {string} pluginId
      * @returns {McpPlugin|null}
      */
     getPlugin(pluginId) {
@@ -222,7 +222,7 @@ class PluginManager {
 
     /**
      * Get plugin ID by tool name
-     * @param {string} toolName 
+     * @param {string} toolName
      * @returns {string|null}
      */
     getPluginIdByTool(toolName) {

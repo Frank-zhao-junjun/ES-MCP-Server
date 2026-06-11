@@ -27,7 +27,7 @@
 - **工具注册**：动态注册新工具的能力
 - **生命周期管理**：插件的初始化和清理
 
-**相关文件：** 
+**相关文件：**
 - `lib/plugin-system.js` - 插件接口和验证
 - `lib/plugin-loader.js` - 插件加载和管理
 - `lib/dynamic-loader.js` - 运行时动态加载
@@ -41,7 +41,7 @@
 服务器现在提供内置工具来管理插件：
 
 - `load_plugin` - 从文件加载插件
-- `unload_plugin` - 卸载指定插件  
+- `unload_plugin` - 卸载指定插件
 - `list_loaded_plugins` - 列出所有已加载插件
 
 ## 3. 实施细节

@@ -45,7 +45,7 @@ const myPlugin = {
       }
     }
   ],
-  
+
   // 可选字段
   init: async (server) => {              // 初始化函数
     // 插件初始化逻辑

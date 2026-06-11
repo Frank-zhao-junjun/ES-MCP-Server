@@ -1,6 +1,6 @@
 /**
  * MCP Server Plugin Loader
- * 
+ *
  * Handles dynamic loading and management of plugins from external modules
  */
 
@@ -19,7 +19,7 @@ class PluginLoader {
 
     /**
      * Load plugins from specified directories
-     * @param {string[]} pluginDirs 
+     * @param {string[]} pluginDirs
      * @returns {Promise<Object>} Result with loaded plugins and errors
      */
     async loadPluginsFromDirs(pluginDirs = this.pluginDirs) {
@@ -35,24 +35,24 @@ class PluginLoader {
             }
 
             const files = fs.readdirSync(dir);
-            
+
             for (const file of files) {
                 if (file.endsWith('.js') || file.endsWith('.cjs') || file.endsWith('.mjs')) {
                     const pluginPath = path.join(dir, file);
-                    
+
                     try {
                         const pluginModule = await this.loadPluginFromFile(pluginPath);
-                        
+
                         if (pluginModule) {
                             const success = await this.pluginManager.registerPlugin(pluginModule);
-                            
+
                             if (success) {
                                 result.loaded.push({
                                     id: pluginModule.id,
                                     path: pluginPath,
                                     name: pluginModule.name
                                 });
-                                
+
                                 // Keep reference to module
                                 this.activePlugins.set(pluginModule.id, pluginModule);
                             } else {
@@ -77,19 +77,19 @@ class PluginLoader {
 
     /**
      * Load a single plugin from a file
-     * @param {string} pluginPath 
+     * @param {string} pluginPath
      * @returns {Promise<McpPlugin|null>}
      */
     async loadPluginFromFile(pluginPath) {
         try {
             // Clear require cache to enable hot reloading
             delete require.cache[require.resolve(pluginPath)];
-            
+
             const pluginModule = require(pluginPath);
-            
+
             // Handle both default export and named exports
             const plugin = pluginModule.default || pluginModule;
-            
+
             if (!plugin || typeof plugin !== 'object') {
                 throw new Error('Plugin module does not export a valid plugin object');
             }
@@ -103,7 +103,7 @@ class PluginLoader {
 
     /**
      * Load a plugin from a module name (npm package)
-     * @param {string} moduleName 
+     * @param {string} moduleName
      * @returns {Promise<McpPlugin|null>}
      */
     async loadPluginFromModule(moduleName) {
@@ -124,8 +124,8 @@ class PluginLoader {
 
     /**
      * Hot reload a plugin from file
-     * @param {string} pluginId 
-     * @param {string} pluginPath 
+     * @param {string} pluginId
+     * @param {string} pluginPath
      * @returns {Promise<boolean>}
      */
     async reloadPlugin(pluginId, pluginPath) {
@@ -137,7 +137,7 @@ class PluginLoader {
 
         // Load and register new version
         const pluginModule = await this.loadPluginFromFile(pluginPath);
-        
+
         if (!pluginModule) {
             return false;
         }
@@ -148,10 +148,10 @@ class PluginLoader {
         }
 
         const success = await this.pluginManager.registerPlugin(pluginModule);
-        
+
         if (success) {
             this.activePlugins.set(pluginModule.id, pluginModule);
-            console.log(`[plugin-loader] Reloaded plugin "${pluginId}"`);
+            console.error(`[plugin-loader] Reloaded plugin "${pluginId}"`);
         }
 
         return success;
@@ -159,8 +159,8 @@ class PluginLoader {
 
     /**
      * Watch plugin files for changes and reload automatically
-     * @param {string} pluginPath 
-     * @param {number} debounceMs 
+     * @param {string} pluginPath
+     * @param {number} debounceMs
      * @returns {Promise<void>}
      */
     async watchPluginFile(pluginPath, debounceMs = 1000) {
@@ -199,12 +199,12 @@ class PluginLoader {
         });
 
         this.watchers.set(pluginPath, watcher);
-        console.log(`[plugin-loader] Started watching plugin file: ${pluginPath}`);
+        console.error(`[plugin-loader] Started watching plugin file: ${pluginPath}`);
     }
 
     /**
      * Stop watching a plugin file
-     * @param {string} pluginPath 
+     * @param {string} pluginPath
      * @returns {void}
      */
     stopWatchingPluginFile(pluginPath) {
@@ -212,27 +212,27 @@ class PluginLoader {
         if (watcher) {
             watcher.close();
             this.watchers.delete(pluginPath);
-            console.log(`[plugin-loader] Stopped watching plugin file: ${pluginPath}`);
+            console.error(`[plugin-loader] Stopped watching plugin file: ${pluginPath}`);
         }
     }
 
     /**
      * Unload a plugin
-     * @param {string} pluginId 
+     * @param {string} pluginId
      * @returns {Promise<boolean>}
      */
     async unloadPlugin(pluginId) {
         const success = await this.pluginManager.unregisterPlugin(pluginId);
-        
+
         if (success) {
             this.activePlugins.delete(pluginId);
-            
+
             // Stop any file watchers for this plugin
             for (const [filePath, watcher] of this.watchers) {
                 try {
                     const loadedModule = require(filePath);
                     const modulePlugin = loadedModule.default || loadedModule;
-                    
+
                     if (modulePlugin && modulePlugin.id === pluginId) {
                         this.stopWatchingPluginFile(filePath);
                     }
@@ -263,7 +263,7 @@ class PluginLoader {
 
     /**
      * Get plugin by ID
-     * @param {string} pluginId 
+     * @param {string} pluginId
      * @returns {McpPlugin|null}
      */
     getPlugin(pluginId) {

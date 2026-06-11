@@ -19,7 +19,7 @@ const {
 const { ErrorCodes, makeError, normalizeError } = require('./lib/errors');
 const { toolSuccess, toolFailure, textJson } = require('./lib/mcp-response');
 const { createRuntimeContext } = require('./runtime-context');
-const { generateTraceId, createTraceContext, recordSapCall, metrics } = require('./lib/observability');
+const { generateTraceId, recordSapCall, metrics } = require('./lib/observability');
 const { getSalesOrderStatus } = require('./services/sales-order-status');
 const { traceSalesOrder } = require('./services/sales-order-trace');
 const { getCostCenter } = require('./services/cost-center');
@@ -29,6 +29,7 @@ const { getPurchaseOrder } = require('./services/purchase-order');
 const { getMaterialStock } = require('./services/material-stock');
 const { getBOM } = require('./services/bom');
 const { getSupplierInvoice } = require('./services/supplier-invoice');
+const { getEntitySchema } = require('./services/entity-schema');
 
 // Plugin system
 const DynamicLoader = require('./lib/dynamic-loader');
@@ -77,7 +78,8 @@ function wrapTool(toolName, handler) {
 
         activeRequests++;
         try {
-            const result = await handler(args);
+            const toolArgs = args && typeof args === 'object' ? { ...args, _traceId: traceId } : { _traceId: traceId };
+            const result = await handler(toolArgs);
             try {
                 const payload = JSON.parse(result.content[0].text);
                 if (!payload.ok) {
@@ -107,8 +109,20 @@ function isDebugToolEnabled() {
     return process.env.MCP_ENABLE_DEBUG_TOOLS === 'true';
 }
 
+function sapContextForTrace(traceId) {
+    return {
+        get lastGoodCred() {
+            return runtimeContext.sap.lastGoodCred;
+        },
+        set lastGoodCred(value) {
+            runtimeContext.sap.lastGoodCred = value;
+        },
+        traceId
+    };
+}
+
 function sapDependencies(traceId) {
-    const context = { ...runtimeContext.sap, traceId };
+    const context = sapContextForTrace(traceId);
     return {
         sapFetch: async (url) => {
             const start = Date.now();
@@ -353,7 +367,7 @@ Parameters:
         top: z.number().min(1).max(MAX_TOP).optional().describe('Max records, default 20, max 100'),
         skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
     },
-    wrapTool('query_sap_scenario', async ({ key, filter, top, skip }) => {
+    wrapTool('query_sap_scenario', async ({ key, filter, top, skip, _traceId }) => {
         const authFailure = requireAuthenticatedTool('query_sap_scenario');
         if (authFailure) return authFailure;
 
@@ -365,7 +379,7 @@ Parameters:
         }
 
         try {
-            const result = await queryScenario(key, filter, top, skip, runtimeContext.sap);
+            const result = await queryScenario(key, filter, top, skip, sapContextForTrace(_traceId));
             const summary = `Scenario: ${result.scenario.title} (${result.scenario.code})\nObjects found: ${result.objects.length}\nTotal records: ${result.objects.reduce((sum, object) => sum + object.count, 0)}`;
             const warnings = Object.keys(result.summary)
                 .filter(entityName => result.summary[entityName] === 0)
@@ -612,13 +626,16 @@ Parameters:
         pluginPath: z.string().min(1).describe('Path to the plugin file to load'),
     },
     wrapTool('load_plugin', async ({ pluginPath }) => {
+        const authFailure = requireAuthenticatedTool('load_plugin');
+        if (authFailure) return authFailure;
+
         if (!dynamicLoader) {
             return textJson(toolFailure('load_plugin', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
         }
 
         try {
             const result = await dynamicLoader.loadPluginFromFile(pluginPath);
-            
+
             if (result.success) {
                 return textJson(toolSuccess('load_plugin', {
                     loaded: result.loaded,
@@ -646,13 +663,16 @@ Parameters:
         pluginId: z.string().min(1).describe('ID of the plugin to unload'),
     },
     wrapTool('unload_plugin', async ({ pluginId }) => {
+        const authFailure = requireAuthenticatedTool('unload_plugin');
+        if (authFailure) return authFailure;
+
         if (!dynamicLoader) {
             return textJson(toolFailure('unload_plugin', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
         }
 
         try {
             const success = await dynamicLoader.unloadPlugin(pluginId);
-            
+
             if (success) {
                 return textJson(toolSuccess('unload_plugin', {
                     pluginId,
@@ -675,6 +695,9 @@ server.tool(
     `List all currently loaded plugins and their tools.`,
     {},
     wrapTool('list_loaded_plugins', async () => {
+        const authFailure = requireAuthenticatedTool('list_loaded_plugins');
+        if (authFailure) return authFailure;
+
         if (!dynamicLoader) {
             return textJson(toolFailure('list_loaded_plugins', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
         }
@@ -682,7 +705,7 @@ server.tool(
         try {
             const plugins = dynamicLoader.listPlugins();
             const dynamicTools = dynamicLoader.listDynamicTools();
-            
+
             return textJson(toolSuccess('list_loaded_plugins', {
                 pluginCount: plugins.length,
                 plugins: plugins.map(p => ({
@@ -733,15 +756,41 @@ Parameters:
     })
 );
 
+server.tool(
+    'get_entity_schema',
+    `Get the schema (fields, types, keys) of an SAP EntitySet or EntityType by parsing the service $metadata. Use this to understand what fields are available before querying.
+
+Parameters:
+- scenarioKey: Scenario key from list_sap_scenarios that contains the target service.
+- entityName: EntitySet or EntityType name, e.g. "A_SalesOrder" or "SalesOrder".
+- useCache: Use cached $metadata (default true). Set false to force refresh.`,
+    {
+        scenarioKey: z.string().describe('Scenario key, e.g. "sap_com_0109_sales_order"'),
+        entityName: z.string().describe('EntitySet or EntityType name, e.g. "A_SalesOrder"'),
+        useCache: z.boolean().optional().default(true).describe('Use cached $metadata'),
+    },
+    wrapTool('get_entity_schema', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_entity_schema');
+        if (authFailure) return authFailure;
+
+        try {
+            const data = await getEntitySchema(args, sapDependencies(args._traceId));
+            return textJson(toolSuccess('get_entity_schema', data));
+        } catch (err) {
+            return textJson(toolFailure('get_entity_schema', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
 async function gracefulShutdown(transport) {
     isShuttingDown = true;
     console.error('[sap-s4-mcp] Shutting down gracefully...');
-    
+
     // Shutdown plugin system
     if (dynamicLoader) {
         await dynamicLoader.shutdown();
     }
-    
+
     while (activeRequests > 0) {
         console.error(`[sap-s4-mcp] Waiting for ${activeRequests} active request(s)...`);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -812,7 +861,7 @@ async function main() {
     // Initialize plugin system
     const pluginDirs = [path.join(__dirname, 'plugins'), path.join(__dirname, 'examples')];
     dynamicLoader = new DynamicLoader(server, pluginDirs);
-    
+
     // Load plugins from configured directories
     try {
         const loadResult = await dynamicLoader.loadPluginsFromDirs(pluginDirs);

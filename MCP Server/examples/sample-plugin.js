@@ -1,6 +1,6 @@
 /**
  * Sample MCP Plugin
- * 
+ *
  * Demonstrates how to create a plugin for the MCP Server
  */
 
@@ -24,7 +24,7 @@ const samplePlugin = {
     name: 'Sample Business Tools',
     version: '1.0.0',
     description: 'A sample plugin demonstrating MCP plugin system',
-    
+
     // Define the tools provided by this plugin
     tools: [
         {
@@ -37,16 +37,16 @@ const samplePlugin = {
             handler: async (args) => {
                 try {
                     const result = await getSampleData(args);
-                    
+
                     // Conditionally include timestamp based on parameter
                     if (!args.includeTimestamp) {
                         delete result.timestamp;
                     }
-                    
+
                     return textJson(toolSuccess('get_sample_data', result));
                 } catch (error) {
                     return textJson(toolFailure(
-                        'get_sample_data', 
+                        'get_sample_data',
                         makeError(ErrorCodes.INTERNAL, `Failed to get sample data: ${error.message}`)
                     ));
                 }
@@ -62,7 +62,7 @@ const samplePlugin = {
             handler: async (args) => {
                 try {
                     let result;
-                    
+
                     switch (args.operation) {
                         case 'sum':
                             result = args.values.reduce((sum, val) => sum + val, 0);
@@ -79,7 +79,7 @@ const samplePlugin = {
                         default:
                             throw new Error(`Unsupported operation: ${args.operation}`);
                     }
-                    
+
                     return textJson(toolSuccess('calculate_metrics', {
                         operation: args.operation,
                         values: args.values,
@@ -88,24 +88,24 @@ const samplePlugin = {
                     }));
                 } catch (error) {
                     return textJson(toolFailure(
-                        'calculate_metrics', 
+                        'calculate_metrics',
                         makeError(ErrorCodes.INVALID_INPUT, `Invalid calculation parameters: ${error.message}`)
                     ));
                 }
             }
         }
     ],
-    
+
     // Optional initialization function
     init: async (server) => {
-        console.log('[sample-plugin] Initializing sample plugin...');
+        console.error('[sample-plugin] Initializing sample plugin...');
         // Perform any initialization needed
         // For example, connecting to external services, loading configuration, etc.
     },
-    
+
     // Optional cleanup function
     cleanup: async (server) => {
-        console.log('[sample-plugin] Cleaning up sample plugin...');
+        console.error('[sample-plugin] Cleaning up sample plugin...');
         // Perform any cleanup needed when plugin is unloaded
     }
 };

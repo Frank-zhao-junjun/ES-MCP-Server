@@ -1,17 +1,29 @@
 /**
  * MCP Server Dynamic Loader
- * 
+ *
  * Provides runtime loading/unloading of tools and plugins
  */
 
+const path = require('path');
 const PluginLoader = require('./plugin-loader');
 
 class DynamicLoader {
-    constructor(server) {
+    constructor(server, pluginDirs = []) {
         this.server = server;
-        this.pluginLoader = new PluginLoader(server);
+        this.pluginDirs = pluginDirs.map(dir => path.resolve(dir));
+        this.pluginLoader = new PluginLoader(server, this.pluginDirs);
         this.dynamicTools = new Map(); // toolName -> { handler, parameters, description, pluginId }
         this.originalTools = new Map(); // To track original server tools
+    }
+
+    isAllowedPluginPath(pluginPath) {
+        const resolvedPath = path.resolve(pluginPath);
+        const normalizePath = value => process.platform === 'win32' ? value.toLowerCase() : value;
+        const normalizedPath = normalizePath(resolvedPath);
+        return this.pluginDirs.some(dir => {
+            const normalizedDir = normalizePath(dir);
+            return normalizedPath === normalizedDir || normalizedPath.startsWith(`${normalizedDir}${path.sep}`);
+        });
     }
 
     /**
@@ -30,7 +42,7 @@ class DynamicLoader {
         try {
             // Validate the plugin module
             const plugin = pluginModule.default || pluginModule;
-            
+
             if (!plugin || typeof plugin !== 'object') {
                 result.errors.push('Invalid plugin module: does not export a plugin object');
                 return result;
@@ -38,11 +50,11 @@ class DynamicLoader {
 
             // Use plugin loader to register the plugin
             const success = await this.pluginLoader.getPluginManager().registerPlugin(plugin);
-            
+
             if (success) {
                 result.success = true;
                 result.loaded = plugin.tools ? plugin.tools.map(t => t.name) : [];
-                
+
                 // Track loaded tools for potential later unloading
                 for (const tool of plugin.tools || []) {
                     this.dynamicTools.set(tool.name, {
@@ -52,8 +64,8 @@ class DynamicLoader {
                         pluginId: plugin.id
                     });
                 }
-                
-                console.log(`[dynamic-loader] Loaded plugin "${plugin.id}" with ${result.loaded.length} tools from ${source}`);
+
+                console.error(`[dynamic-loader] Loaded plugin "${plugin.id}" with ${result.loaded.length} tools from ${source}`);
             } else {
                 result.errors.push(`Failed to register plugin "${plugin.id}"`);
             }
@@ -71,9 +83,17 @@ class DynamicLoader {
      */
     async loadPluginFromFile(pluginPath) {
         try {
+            if (!this.isAllowedPluginPath(pluginPath)) {
+                return {
+                    success: false,
+                    loaded: [],
+                    errors: [`Plugin path is outside allowed plugin directories: ${pluginPath}`]
+                };
+            }
+
             // Clear require cache to enable hot reloading
             delete require.cache[require.resolve(pluginPath)];
-            
+
             const pluginModule = require(pluginPath);
             return await this.loadPlugin(pluginModule, pluginPath);
         } catch (error) {
@@ -112,7 +132,7 @@ class DynamicLoader {
         // Since MCP SDK doesn't support removing tools directly,
         // we'll just remove from our tracking and log a warning
         const plugin = this.pluginLoader.getPluginManager().getPlugin(pluginId);
-        
+
         if (!plugin) {
             console.error(`[dynamic-loader] Plugin with ID "${pluginId}" not found`);
             return false;
@@ -120,14 +140,14 @@ class DynamicLoader {
 
         // Attempt to unregister the plugin
         const success = await this.pluginLoader.unloadPlugin(pluginId);
-        
+
         if (success) {
             // Remove tools from our tracking
             for (const tool of plugin.tools || []) {
                 this.dynamicTools.delete(tool.name);
             }
-            
-            console.log(`[dynamic-loader] Unloaded plugin "${pluginId}"`);
+
+            console.error(`[dynamic-loader] Unloaded plugin "${pluginId}"`);
         }
 
         return success;
@@ -159,7 +179,7 @@ class DynamicLoader {
                 pluginId: groupId || 'dynamic'
             });
 
-            console.log(`[dynamic-loader] Dynamically loaded tool "${name}"`);
+            console.error(`[dynamic-loader] Dynamically loaded tool "${name}"`);
             return true;
         } catch (error) {
             console.error(`[dynamic-loader] Failed to load tool "${name}":`, error.message);
@@ -174,13 +194,13 @@ class DynamicLoader {
      */
     unloadTool(name) {
         const toolInfo = this.dynamicTools.get(name);
-        
+
         if (!toolInfo) {
             console.warn(`[dynamic-loader] Tool "${name}" not found or not dynamically loaded`);
             return false;
         }
 
-        // Since MCP SDK doesn't support removing tools directly, 
+        // Since MCP SDK doesn't support removing tools directly,
         // we'll replace the handler with a disabled one
         this.server.tool(
             name,
@@ -209,7 +229,7 @@ class DynamicLoader {
         );
 
         this.dynamicTools.delete(name);
-        console.log(`[dynamic-loader] Unloaded tool "${name}"`);
+        console.error(`[dynamic-loader] Unloaded tool "${name}"`);
 
         return true;
     }
@@ -252,6 +272,21 @@ class DynamicLoader {
         return this.pluginLoader.getLoadedPlugins();
     }
 
+    async loadPluginsFromDirs(pluginDirs = this.pluginDirs) {
+        const result = await this.pluginLoader.loadPluginsFromDirs(pluginDirs);
+        for (const plugin of this.pluginLoader.getLoadedPlugins()) {
+            for (const tool of plugin.tools || []) {
+                this.dynamicTools.set(tool.name, {
+                    handler: tool.handler,
+                    parameters: tool.parameters,
+                    description: tool.description,
+                    pluginId: plugin.id
+                });
+            }
+        }
+        return result;
+    }
+
     /**
      * Enable hot reloading for a plugin file
      * @param {string} pluginPath - Path to the plugin file
@@ -292,7 +327,7 @@ class DynamicLoader {
     async shutdown() {
         // Clean up plugin loader
         await this.pluginLoader.shutdown();
-        
+
         // Clear our internal tracking
         this.dynamicTools.clear();
     }

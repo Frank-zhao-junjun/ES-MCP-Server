@@ -219,7 +219,7 @@ async function testServiceDocumentFormats(mock) {
         d: { EntitySets: ['SetA', 'SetB', 'SetC'] },
     });
 
-    // V4 Service Document  
+    // V4 Service Document
     mockForDoc.on(/\/odata4\/.*\/0001\/?\?sap-client/, (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({

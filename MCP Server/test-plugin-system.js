@@ -13,7 +13,7 @@ const fs = require('fs');
 
 const requiredFiles = [
     './lib/plugin-system.js',
-    './lib/plugin-loader.js', 
+    './lib/plugin-loader.js',
     './lib/dynamic-loader.js',
     './examples/sample-plugin.js',
     './docs/plugin-system-guide.md'
@@ -81,7 +81,7 @@ console.log('\n✓ Testing main server integration...');
 try {
     // Temporarily mock the MCP server to avoid actual server startup
     const originalMcpServer = require('@modelcontextprotocol/sdk/server/mcp.js');
-    
+
     // Create a mock server for testing
     const mockServer = {
         tool: function(name, description, parameters, handler) {
@@ -93,14 +93,14 @@ try {
             return Promise.resolve();
         }
     };
-    
+
     // Mock the required modules
     jest = {
         spyOn: function(obj, method) {
             return { mockImplementation: function() {} };
         }
     };
-    
+
     // We can't fully test the server without starting it,
     // but we can check that it doesn't have syntax errors
     const serverCode = fs.readFileSync('./mcp-server.js', 'utf8');
@@ -178,7 +178,7 @@ serverProcess.stderr.on('data', (data) => {
 setTimeout(() => {
     serverProcess.kill('SIGTERM');
     console.log('✓ Test completed - server terminated');
-    
+
     if (serverStarted) {
         console.log('\n🎉 PLUGIN SYSTEM FULLY INTEGRATED AND WORKING!');
         console.log('✅ MCP Server now has complete plugin support');
