@@ -10,6 +10,7 @@ const { getSalesOrderStatus } = require('../../services/sales-order-status');
 const { traceSalesOrder } = require('../../services/sales-order-trace');
 const { getCostCenter } = require('../../services/cost-center');
 const { getProduct } = require('../../services/product');
+const { getBusinessPartner } = require('../../services/business-partner');
 
 // ── 工具：从真实 HTTP 获取数据的 sapFetch ──
 function createRealSapFetch(baseUrl) {
@@ -135,6 +136,18 @@ async function testGetProductViaMock(mock) {
 }
 
 // ════════════════════════════════════════════════════
+// Business Partner Integration Test
+// ════════════════════════════════════════════════════
+
+async function testGetBPartnerViaMock(mock) {
+    const deps = { sapFetch: createRealSapFetch(mock.baseUrl), extractRows: createRealExtractRows() };
+    const result = await getBusinessPartner({ businessPartner: '1000001', includeCustomer: true }, deps);
+    assert.strictEqual(result.count, 2);
+    assert.strictEqual(result.businessPartners[0].BusinessPartnerFullName, 'Test Corp');
+    assert.strictEqual(result.businessPartners[0].customerDetail.CustomerAccountGroup, 'Z001');
+}
+
+// ════════════════════════════════════════════════════
 // REQ-006-04: Mock 错误响应
 // ════════════════════════════════════════════════════
 
@@ -209,6 +222,7 @@ async function run() {
         await testTraceSalesOrderViaMock(mock);
         await testGetCostCenterViaMock(mock);
         await testGetProductViaMock(mock);
+        await testGetBPartnerViaMock(mock);
         await testErrorHandling(mock);
         await testServiceDocumentFormats(mock);
 

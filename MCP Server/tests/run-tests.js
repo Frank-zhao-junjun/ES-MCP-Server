@@ -11,6 +11,7 @@ const mcpSapCore = require('./unit/mcp-sap-core.test');
 const services = require('./unit/services.test');
 const costCenter = require('./unit/cost-center.test');
 const product = require('./unit/product.test');
+const businessPartner = require('./unit/business-partner.test');
 const sapIntegration = require('./integration/sap-integration.test');
 
 async function main() {
@@ -30,6 +31,7 @@ async function main() {
     await services.run();
     await costCenter.run();
     await product.run();
+    await businessPartner.run();
     console.log('');
 
     // ── Integration Tests ──

@@ -24,6 +24,7 @@ const { getSalesOrderStatus } = require('./services/sales-order-status');
 const { traceSalesOrder } = require('./services/sales-order-trace');
 const { getCostCenter } = require('./services/cost-center');
 const { getProduct } = require('./services/product');
+const { getBusinessPartner } = require('./services/business-partner');
 
 const server = new McpServer({
     name: 'sap-s4-mcp',
@@ -433,6 +434,41 @@ Parameters:
             return textJson(toolSuccess('get_product', data, warnings));
         } catch (err) {
             return textJson(toolFailure('get_product', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_business_partner
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_business_partner',
+    `Query SAP Business Partner master data. Returns BP details including name, category, and optionally linked Customer/Supplier records.
+
+Parameters:
+- businessPartner: BP number(s), single "1000001" or comma-separated "1000001,1000002".
+- businessPartnerCategory: BP category filter (e.g. "1" for person, "2" for organization).
+- includeCustomer: Include linked Customer master data (default false).
+- includeSupplier: Include linked Supplier master data (default false).
+- top: Max records, default 20, max 100.`,
+    {
+        businessPartner: z.string().optional().describe('BP number(s), e.g. "1000001" or "1000001,1000002"'),
+        businessPartnerCategory: z.string().optional().describe('BP category, e.g. "1" (person), "2" (organization)'),
+        includeCustomer: z.boolean().optional().default(false),
+        includeSupplier: z.boolean().optional().default(false),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+    },
+    wrapTool('get_business_partner', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_business_partner');
+        if (authFailure) return authFailure;
+
+        try {
+            const data = await getBusinessPartner(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No business partners found matching the criteria'] : [];
+            return textJson(toolSuccess('get_business_partner', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_business_partner', normalizeError(err, ErrorCodes.QUERY_FAILED)));
         }
     })
 );

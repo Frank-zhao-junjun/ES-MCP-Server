@@ -1,51 +1,30 @@
+const fs = require('fs');
+const path = require('path');
 const { ErrorCodes, makeError } = require('../lib/errors');
 
 const DEFAULT_TOP = 20;
 const MAX_TOP = 50;
 const SAP_CLIENT = '100';
 
-const TRACE_STEPS = [
-    {
-        id: 'productionOrders',
-        includeFlag: 'includeProductionOrders',
-        resultKey: 'productionOrders',
-        emptyWarning: 'No Production Orders linked to this Sales Order',
-        failureWarning: 'Production Orders query failed',
-        url: '/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/ProductionOrder',
-        formatJson: false,
-        buildFilter: salesOrder => `SalesOrder eq '${salesOrder}'`
-    },
-    {
-        id: 'deliveries',
-        includeFlag: 'includeDeliveries',
-        resultKey: 'deliveries',
-        emptyWarning: 'No Outbound Deliveries linked to this Sales Order',
-        failureWarning: 'Outbound Deliveries query failed',
-        url: '/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/A_OutbDeliveryItem',
-        formatJson: true,
-        buildFilter: salesOrder => `ReferenceSDDocument eq '${salesOrder}' and ReferenceSDDocumentCategory eq 'C'`
-    },
-    {
-        id: 'materialDocuments',
-        includeFlag: 'includeMaterialDocuments',
-        resultKey: 'materialDocuments',
-        emptyWarning: 'No Material Documents linked to this Sales Order',
-        failureWarning: 'Material Documents query failed',
-        url: '/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentItem',
-        formatJson: true,
-        buildFilter: salesOrder => `(SalesOrder eq '${salesOrder}' or SpecialStockIdfgSalesOrder eq '${salesOrder}')`
-    },
-    {
-        id: 'billingDocuments',
-        includeFlag: 'includeBillingDocuments',
-        resultKey: 'billingDocuments',
-        emptyWarning: 'No Billing Documents linked to this Sales Order (may not be invoiced yet)',
-        failureWarning: 'Billing Documents query failed',
-        url: '/sap/opu/odata4/sap/api_billingdocument/srvd_a2x/sap/billingdocument/0001/BillingDocumentItem',
-        formatJson: false,
-        buildFilter: salesOrder => `SalesDocument eq '${salesOrder}'`
-    },
-];
+let cachedTraceSteps = null;
+let cachedTraceStepsMtime = 0;
+
+function loadTraceSteps() {
+    const configPath = path.join(__dirname, '..', 'config', 'trace-config.json');
+    try {
+        const stat = fs.statSync(configPath);
+        if (cachedTraceSteps && stat.mtimeMs === cachedTraceStepsMtime) {
+            return cachedTraceSteps;
+        }
+        const raw = fs.readFileSync(configPath, 'utf8');
+        const config = JSON.parse(raw);
+        cachedTraceSteps = config.steps || [];
+        cachedTraceStepsMtime = stat.mtimeMs;
+        return cachedTraceSteps;
+    } catch (err) {
+        throw makeError(ErrorCodes.INTERNAL, `Failed to load trace-config.json: ${err.message}`);
+    }
+}
 
 function validateSalesOrder(salesOrder) {
     if (!salesOrder || typeof salesOrder !== 'string') {
@@ -61,12 +40,21 @@ function encodeUriStrict(str) {
     return encodeURIComponent(str).replace(/'/g, '%27');
 }
 
+function buildFilterFromTemplate(template, normalizedSalesOrder) {
+    // Only allow the {salesOrder} placeholder to prevent injection via template
+    if (!template.includes('{salesOrder}')) {
+        throw makeError(ErrorCodes.INTERNAL, `Invalid filterTemplate: missing {salesOrder} placeholder`);
+    }
+    const filter = template.replace(/\{salesOrder\}/g, normalizedSalesOrder);
+    return encodeUriStrict(filter);
+}
+
 function buildUrl(step, top, normalizedSalesOrder) {
     const params = [
         step.formatJson ? '$format=json' : null,
         `sap-client=${SAP_CLIENT}`,
         `$top=${top}`,
-        `$filter=${encodeUriStrict(step.buildFilter(normalizedSalesOrder))}`,
+        `$filter=${buildFilterFromTemplate(step.filterTemplate, normalizedSalesOrder)}`,
     ].filter(Boolean);
 
     return `${step.url}?${params.join('&')}`;
@@ -125,7 +113,8 @@ async function traceSalesOrder(args, dependencies) {
         errors.push({ step: 'salesOrderItems', error: err.code || err.message });
     }
 
-    for (const step of TRACE_STEPS) {
+    const traceSteps = loadTraceSteps();
+    for (const step of traceSteps) {
         if (!includeOptions[step.includeFlag]) continue;
 
         try {
@@ -147,7 +136,7 @@ async function traceSalesOrder(args, dependencies) {
 }
 
 module.exports = {
-    TRACE_STEPS,
+    loadTraceSteps,
     traceSalesOrder,
     validateSalesOrder,
 };

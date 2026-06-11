@@ -208,6 +208,23 @@ async function createSapMockServer() {
         }));
     });
 
+    // V2 Business Partner
+    mock.on(/API_BUSINESS_PARTNER/, (req, res) => {
+        if (req.url.includes('A_Customer?')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ Customer: '1000001', CustomerAccountGroup: 'Z001' }] } }));
+        } else if (req.url.includes('A_Supplier?')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ Supplier: '5000001', SupplierAccountGroup: 'Z002' }] } }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [
+                { BusinessPartner: '1000001', BusinessPartnerFullName: 'Test Corp', BusinessPartnerCategory: '2', Customer: '1000001', Supplier: '5000001' },
+                { BusinessPartner: '1000002', BusinessPartnerFullName: 'John Doe', BusinessPartnerCategory: '1', Customer: '', Supplier: '' },
+            ] } }));
+        }
+    });
+
     // V2 Product Master
     mock.on(/API_PRODUCT_SRV/, (req, res) => {
         if (req.url.includes('A_ProductDescription')) {

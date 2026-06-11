@@ -1,0 +1,46 @@
+{
+  "$schema": "./trace-config.schema.json",
+  "description": "Sales Order trace step definitions. Each step maps to an SAP OData entity query.",
+  "steps": [
+    {
+      "id": "productionOrders",
+      "includeFlag": "includeProductionOrders",
+      "resultKey": "productionOrders",
+      "emptyWarning": "No Production Orders linked to this Sales Order",
+      "failureWarning": "Production Orders query failed",
+      "url": "/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/ProductionOrder",
+      "formatJson": false,
+      "filterTemplate": "SalesOrder eq '{salesOrder}'"
+    },
+    {
+      "id": "deliveries",
+      "includeFlag": "includeDeliveries",
+      "resultKey": "deliveries",
+      "emptyWarning": "No Outbound Deliveries linked to this Sales Order",
+      "failureWarning": "Outbound Deliveries query failed",
+      "url": "/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/A_OutbDeliveryItem",
+      "formatJson": true,
+      "filterTemplate": "ReferenceSDDocument eq '{salesOrder}' and ReferenceSDDocumentCategory eq 'C'"
+    },
+    {
+      "id": "materialDocuments",
+      "includeFlag": "includeMaterialDocuments",
+      "resultKey": "materialDocuments",
+      "emptyWarning": "No Material Documents linked to this Sales Order",
+      "failureWarning": "Material Documents query failed",
+      "url": "/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentItem",
+      "formatJson": true,
+      "filterTemplate": "(SalesOrder eq '{salesOrder}' or SpecialStockIdfgSalesOrder eq '{salesOrder}')"
+    },
+    {
+      "id": "billingDocuments",
+      "includeFlag": "includeBillingDocuments",
+      "resultKey": "billingDocuments",
+      "emptyWarning": "No Billing Documents linked to this Sales Order (may not be invoiced yet)",
+      "failureWarning": "Billing Documents query failed",
+      "url": "/sap/opu/odata4/sap/api_billingdocument/srvd_a2x/sap/billingdocument/0001/BillingDocumentItem",
+      "formatJson": false,
+      "filterTemplate": "SalesDocument eq '{salesOrder}'"
+    }
+  ]
+}
