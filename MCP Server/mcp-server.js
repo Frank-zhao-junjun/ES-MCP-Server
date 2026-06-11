@@ -108,11 +108,12 @@ function isDebugToolEnabled() {
 }
 
 function sapDependencies(traceId) {
+    const context = { ...runtimeContext.sap, traceId };
     return {
         sapFetch: async (url) => {
             const start = Date.now();
             try {
-                const result = await sapFetch(url, runtimeContext.sap);
+                const result = await sapFetch(url, context);
                 const durationMs = Date.now() - start;
                 metrics.recordSapCall(durationMs, true);
                 if (traceId) {

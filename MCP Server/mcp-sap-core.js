@@ -128,13 +128,18 @@ async function sapFetchOnce(urlPath, context) {
         const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
         try {
+            const headers = {
+                Authorization: `Basic ${buildBasicAuth(cred.user, cred.password)}`,
+                Accept: 'application/json',
+                'sap-client': SAP_CLIENT,
+            };
+            if (context.traceId) {
+                headers['X-Request-ID'] = context.traceId;
+            }
+
             const resp = await fetch(url, {
                 method: 'GET',
-                headers: {
-                    Authorization: `Basic ${buildBasicAuth(cred.user, cred.password)}`,
-                    Accept: 'application/json',
-                    'sap-client': SAP_CLIENT,
-                },
+                headers,
                 signal: controller.signal,
             });
 
