@@ -9,6 +9,7 @@ const { createSapMockServer } = require('./sap-mock-server');
 const { getSalesOrderStatus } = require('../../services/sales-order-status');
 const { traceSalesOrder } = require('../../services/sales-order-trace');
 const { getCostCenter } = require('../../services/cost-center');
+const { getProduct } = require('../../services/product');
 
 // ── 工具：从真实 HTTP 获取数据的 sapFetch ──
 function createRealSapFetch(baseUrl) {
@@ -115,6 +116,25 @@ async function testGetCostCenterViaMock(mock) {
 }
 
 // ════════════════════════════════════════════════════
+// Product Integration Test
+// ════════════════════════════════════════════════════
+
+async function testGetProductViaMock(mock) {
+    const deps = {
+        sapFetch: createRealSapFetch(mock.baseUrl),
+        extractRows: createRealExtractRows(),
+    };
+
+    const result = await getProduct({ product: 'MAT001', top: 5 }, deps);
+
+    assert.strictEqual(result.count, 2, 'should return 2 products');
+    assert.strictEqual(result.products[0].Product, 'MAT001');
+    assert.strictEqual(result.products[0].ProductType, 'FERT');
+    assert.ok(result.products[0].descriptions.length > 0);
+    assert.strictEqual(result.products[0].descriptions[0].ProductDescription, '成品A');
+}
+
+// ════════════════════════════════════════════════════
 // REQ-006-04: Mock 错误响应
 // ════════════════════════════════════════════════════
 
@@ -188,6 +208,7 @@ async function run() {
         await testGetSalesOrderStatusViaMock(mock);
         await testTraceSalesOrderViaMock(mock);
         await testGetCostCenterViaMock(mock);
+        await testGetProductViaMock(mock);
         await testErrorHandling(mock);
         await testServiceDocumentFormats(mock);
 

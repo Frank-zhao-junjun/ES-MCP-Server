@@ -23,6 +23,7 @@ const { generateTraceId, createTraceContext, recordSapCall, metrics } = require(
 const { getSalesOrderStatus } = require('./services/sales-order-status');
 const { traceSalesOrder } = require('./services/sales-order-trace');
 const { getCostCenter } = require('./services/cost-center');
+const { getProduct } = require('./services/product');
 
 const server = new McpServer({
     name: 'sap-s4-mcp',
@@ -401,6 +402,41 @@ Parameters:
     })
 );
 
+// ────────────────────────────────────────────────────
+// Tool: get_product
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_product',
+    `Query SAP Product master data. Returns product details including type, group, base unit, status, and multilingual descriptions.
+
+Parameters:
+- product: Material number(s), single "MAT001" or comma-separated "MAT001,MAT002".
+- productType: Product type filter (e.g. "FERT" for finished good, "HAWA" for trading good).
+- productGroup: Product group filter.
+- includeDescription: Include multilingual product descriptions (default true).
+- top: Max records, default 20, max 100.`,
+    {
+        product: z.string().optional().describe('Material number(s), e.g. "MAT001" or "MAT001,MAT002"'),
+        productType: z.string().optional().describe('Product type, e.g. "FERT", "HAWA", "ROH"'),
+        productGroup: z.string().optional().describe('Product group code'),
+        includeDescription: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+    },
+    wrapTool('get_product', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_product');
+        if (authFailure) return authFailure;
+
+        try {
+            const data = await getProduct(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No products found matching the criteria'] : [];
+            return textJson(toolSuccess('get_product', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_product', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
 async function gracefulShutdown(transport) {
     isShuttingDown = true;
     console.error('[sap-s4-mcp] Shutting down gracefully...');
@@ -413,7 +449,62 @@ async function gracefulShutdown(transport) {
     process.exit(0);
 }
 
+function validateStartupConfig() {
+    const errors = [];
+    const warnings = [];
+
+    // 1. Credentials file
+    const credFile = process.env.SAP_CREDENTIALS_FILE || path.join(__dirname, '..', 'user.txt');
+    try {
+        fs.accessSync(credFile, fs.constants.R_OK);
+    } catch (err) {
+        errors.push(`SAP_CREDENTIALS_FILE not readable: ${credFile} — ${err.message}`);
+    }
+
+    // 2. Scenario directory
+    const scenarioDir = process.env.SAP_SCENARIO_DIR || path.join(__dirname, '..');
+    try {
+        fs.accessSync(scenarioDir, fs.constants.R_OK);
+        const files = fs.readdirSync(scenarioDir).filter(f => /SAP_COM_\d{4}/i.test(f) && /\.txt$/i.test(f));
+        if (files.length === 0) {
+            warnings.push(`No SAP_COM_*.txt scenario files found in: ${scenarioDir}`);
+        }
+    } catch (err) {
+        errors.push(`SAP_SCENARIO_DIR not readable: ${scenarioDir} — ${err.message}`);
+    }
+
+    // 3. SAP_BASE_URL format
+    const baseUrl = process.env.SAP_BASE_URL || 'https://my200967-api.s4hana.sapcloud.cn';
+    try {
+        const parsed = new URL(baseUrl);
+        if (!/^https?:$/.test(parsed.protocol)) {
+            errors.push(`SAP_BASE_URL must use http or https protocol: ${baseUrl}`);
+        }
+    } catch {
+        errors.push(`SAP_BASE_URL is not a valid URL: ${baseUrl}`);
+    }
+
+    // 4. SAP_CLIENT format
+    const client = process.env.SAP_CLIENT || '100';
+    if (!/^\d{3}$/.test(client)) {
+        warnings.push(`SAP_CLIENT should be a 3-digit number, got: ${client}`);
+    }
+
+    for (const w of warnings) {
+        console.error('[sap-s4-mcp config-warning]', w);
+    }
+
+    if (errors.length > 0) {
+        for (const e of errors) {
+            console.error('[sap-s4-mcp config-error]', e);
+        }
+        console.error('[sap-s4-mcp] Startup aborted due to configuration errors');
+        process.exit(1);
+    }
+}
+
 async function main() {
+    validateStartupConfig();
     initAuth(runtimeContext.auth);
 
     const transport = new StdioServerTransport();

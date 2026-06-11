@@ -208,6 +208,26 @@ async function createSapMockServer() {
         }));
     });
 
+    // V2 Product Master
+    mock.on(/API_PRODUCT_SRV/, (req, res) => {
+        if (req.url.includes('A_ProductDescription')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                d: { results: [{ Product: 'MAT001', Language: 'ZH', ProductDescription: '成品A' }] },
+            }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                d: {
+                    results: [
+                        { Product: 'MAT001', ProductType: 'FERT', BaseUnit: 'PC', ProductGroup: 'PG1' },
+                        { Product: 'MAT002', ProductType: 'HAWA', BaseUnit: 'KG', ProductGroup: 'PG2' },
+                    ],
+                },
+            }));
+        }
+    });
+
     // V4 Cost Center
     mock.on(/api_cost_center/, (req, res) => {
         if (req.url.includes('A_CostCenterText_2')) {
