@@ -26,6 +26,7 @@ const { getCostCenter } = require('./services/cost-center');
 const { getProduct } = require('./services/product');
 const { getBusinessPartner } = require('./services/business-partner');
 const { getPurchaseOrder } = require('./services/purchase-order');
+const { getMaterialStock } = require('./services/material-stock');
 
 const server = new McpServer({
     name: 'sap-s4-mcp',
@@ -506,6 +507,40 @@ Parameters:
             return textJson(toolSuccess('get_purchase_order', data, warnings));
         } catch (err) {
             return textJson(toolFailure('get_purchase_order', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_material_stock
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_material_stock',
+    `Query SAP Material Stock inventory levels. Returns stock quantities by material, plant, storage location, and batch.
+
+Parameters:
+- material: Material number(s), single or comma-separated.
+- plant: Plant code.
+- storageLocation: Storage location code.
+- batch: Batch number.
+- top: Max records, default 20, max 100.`,
+    {
+        material: z.string().optional().describe('Material number(s), e.g. "MAT001" or "MAT001,MAT002"'),
+        plant: z.string().optional().describe('Plant code'),
+        storageLocation: z.string().optional().describe('Storage location'),
+        batch: z.string().optional().describe('Batch number'),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+    },
+    wrapTool('get_material_stock', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_material_stock');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getMaterialStock(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No stock records found'] : [];
+            return textJson(toolSuccess('get_material_stock', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_material_stock', normalizeError(err, ErrorCodes.QUERY_FAILED)));
         }
     })
 );

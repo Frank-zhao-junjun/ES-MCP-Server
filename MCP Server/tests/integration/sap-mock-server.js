@@ -208,6 +208,12 @@ async function createSapMockServer() {
         }));
     });
 
+    // V2 Material Stock
+    mock.on(/MATERIAL_STOCK_SRV/, (req, res) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ d: { results: [{ Material: 'MAT001', Plant: '1010', StorageLocation: '0001', MatlWrhsStkQtyInMatlBaseUnit: '500', InventoryStockType: '01' }] } }));
+    });
+
     // V2 Purchase Order
     mock.on(/PURCHASEORDER_PROCESS/, (req, res) => {
         if (req.url.includes('A_PurchaseOrderItem')) {

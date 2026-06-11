@@ -10,8 +10,9 @@ const REQUEST_TIMEOUT_MS = Number(process.env.SAP_REQUEST_TIMEOUT_MS || 30000);
 
 let cachedCredentials = null;
 let cachedCredentialMtime = 0;
-const discoveryCache = new Map();
-const scenariosCache = { value: null };
+const DISCOVERY_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const discoveryCache = new Map(); // key -> { data, cachedAt }
+const scenariosCache = { value: null, mtime: 0 };
 
 function createSapContext() {
     return {
@@ -145,7 +146,10 @@ function extractRows(data) {
 }
 
 async function discoverEntitySets(baseUrl, context = defaultSapContext) {
-    if (discoveryCache.has(baseUrl)) return discoveryCache.get(baseUrl);
+    const cached = discoveryCache.get(baseUrl);
+    if (cached && Date.now() - cached.cachedAt < DISCOVERY_TTL_MS) {
+        return cached.data;
+    }
 
     const discovered = [];
 
@@ -174,7 +178,7 @@ async function discoverEntitySets(baseUrl, context = defaultSapContext) {
         }
     }
 
-    discoveryCache.set(baseUrl, discovered);
+    discoveryCache.set(baseUrl, { data: discovered, cachedAt: Date.now() });
     return discovered;
 }
 
@@ -200,12 +204,30 @@ function normalizeScenarioKey(code, title) {
     return normalizedTitle ? `${code.toLowerCase()}_${normalizedTitle}` : code.toLowerCase();
 }
 
+function getScenarioFilesMaxMtime(scenarioDir) {
+    let maxMtime = 0;
+    try {
+        const entries = fs.readdirSync(scenarioDir);
+        for (const fileName of entries) {
+            if (/\.txt$/i.test(fileName) && /SAP_COM_\d{4}/i.test(fileName)) {
+                const stat = fs.statSync(path.join(scenarioDir, fileName));
+                if (stat.mtimeMs > maxMtime) {
+                    maxMtime = stat.mtimeMs;
+                }
+            }
+        }
+    } catch {
+        // Directory unreadable; cache will be invalidated.
+    }
+    return maxMtime;
+}
+
 function parseScenarioFiles() {
     const scenarioDir = process.env.SAP_SCENARIO_DIR || path.join(__dirname, '..');
     const files = fs.readdirSync(scenarioDir)
         .filter(fileName => /\.txt$/i.test(fileName) && /SAP_COM_\d{4}/i.test(fileName));
 
-    return files.map(fileName => {
+    const scenarios = files.map(fileName => {
         const fullPath = path.join(scenarioDir, fileName);
         const content = fs.readFileSync(fullPath, 'utf8');
         const codeMatch = fileName.match(/SAP_COM_\d{4}/i);
@@ -234,12 +256,20 @@ function parseScenarioFiles() {
             urls: [...new Set(urls)],
         };
     });
+
+    return { scenarios, maxMtime: getScenarioFilesMaxMtime(scenarioDir) };
 }
 
 function getScenarios() {
-    if (!scenariosCache.value) {
-        scenariosCache.value = parseScenarioFiles();
+    const scenarioDir = process.env.SAP_SCENARIO_DIR || path.join(__dirname, '..');
+    const currentMaxMtime = getScenarioFilesMaxMtime(scenarioDir);
+
+    if (!scenariosCache.value || currentMaxMtime > scenariosCache.mtime) {
+        const result = parseScenarioFiles();
+        scenariosCache.value = result.scenarios;
+        scenariosCache.mtime = result.maxMtime;
     }
+
     return scenariosCache.value;
 }
 

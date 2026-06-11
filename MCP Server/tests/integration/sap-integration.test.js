@@ -12,6 +12,7 @@ const { getCostCenter } = require('../../services/cost-center');
 const { getProduct } = require('../../services/product');
 const { getBusinessPartner } = require('../../services/business-partner');
 const { getPurchaseOrder } = require('../../services/purchase-order');
+const { getMaterialStock } = require('../../services/material-stock');
 
 // ── 工具：从真实 HTTP 获取数据的 sapFetch ──
 function createRealSapFetch(baseUrl) {
@@ -137,6 +138,17 @@ async function testGetProductViaMock(mock) {
 }
 
 // ════════════════════════════════════════════════════
+// Material Stock Integration Test
+// ════════════════════════════════════════════════════
+
+async function testGetStockViaMock(mock) {
+    const deps = { sapFetch: createRealSapFetch(mock.baseUrl), extractRows: createRealExtractRows() };
+    const r = await getMaterialStock({ material: 'MAT001' }, deps);
+    assert.strictEqual(r.count, 1);
+    assert.strictEqual(r.stocks[0].MatlWrhsStkQtyInMatlBaseUnit, '500');
+}
+
+// ════════════════════════════════════════════════════
 // Purchase Order Integration Test
 // ════════════════════════════════════════════════════
 
@@ -237,6 +249,7 @@ async function run() {
         await testGetProductViaMock(mock);
         await testGetBPartnerViaMock(mock);
         await testGetPOViaMock(mock);
+        await testGetStockViaMock(mock);
         await testErrorHandling(mock);
         await testServiceDocumentFormats(mock);
 
