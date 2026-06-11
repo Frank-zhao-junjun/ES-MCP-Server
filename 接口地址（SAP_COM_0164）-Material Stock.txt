@@ -1,0 +1,2 @@
+	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MATERIAL_STOCK_SRV

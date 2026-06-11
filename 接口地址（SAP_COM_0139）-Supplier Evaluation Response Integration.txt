@@ -1,0 +1,3 @@
+Supplier Evaluation Response - Read
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_SUPLR_EVAL_RESPONSE_SRV

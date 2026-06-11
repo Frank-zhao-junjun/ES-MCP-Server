@@ -1,0 +1,6 @@
+Basic Authentication
+OAuth 2.0 Authorization Code
+X.509
+https://{host}:{port}/sap/opu/odata/sap/API_PRODUCTION_ROUTING;v=0003
+Or
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_PRODUCTION_ROUTING;v=0003

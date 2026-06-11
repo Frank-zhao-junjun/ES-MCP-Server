@@ -1,0 +1,10 @@
+Foundation Interfaces - Scope Decision
+Date: 2026-06-08
+
+Per user request, Foundation interfaces are now out of scope for this project.
+
+Decision:
+- Ignore all Foundation API testing and UI integration.
+- Do not add Currency / Exchange Rate / UnitOfMeasure / Incoterm / ItemCategory / Region / MaterialGroup endpoints.
+- Keep focus on currently enabled realtime pull APIs (Business Partner + Product).
+

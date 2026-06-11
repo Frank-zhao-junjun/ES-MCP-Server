@@ -1,0 +1,15 @@
+Business Roles - Read：
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/APS_IAM_SIAG_BROLE_SRV
+
+Authorization Profiles：
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/APS_IAM_SIAG_PROFILE_SRV
+
+PFCG Roles：
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/APS_IAM_SIAG_ROLE_SRV
+
+Users：
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/APS_IAM_SIAG_USER_SRV

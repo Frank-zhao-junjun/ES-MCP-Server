@@ -1,0 +1,6 @@
+SAP ：https://my200967-api.s4hana.sapcloud.cn 
+接口调用的通信用户：User ID:CC0000000003 or User Name:EPC_USER  
+密码：}dfbCxTQK@HpYnTp8VWRa)YhZ}SW(>{hgMB4&~GS  或者这个：o3rouK6{rGlt@>5]N~ZY($7BjNr8rt9VzUQub+GB
+Client:100
+
+ 

@@ -1,0 +1,5 @@
+Physical Inventory Document
+API_PHYSICALINVENTORYDOCUMENT_G4BA
+OData V4
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_physicalinventorydocument/srvd_a2x/sap/physicalinventorydocument/0001/
+

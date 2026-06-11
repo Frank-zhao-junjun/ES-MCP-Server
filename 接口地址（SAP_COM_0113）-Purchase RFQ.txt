@@ -1,0 +1,8 @@
+Supplier Quotation RAP Odata Service
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/
+
+RFQ RAP OData Service
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_requestforquotation_2/srvd_a2x/sap/requestforquotation/0001/
+

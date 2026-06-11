@@ -1,0 +1,4 @@
+
+Service：Material Documents - Read 
+Application Protocol：OData V2	
+Service URL/Service Interface：https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV

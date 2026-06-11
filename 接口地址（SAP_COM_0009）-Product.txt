@@ -1,0 +1,19 @@
+Product Master (A2X)
+API_PRODUCT_SRV_0001_IWSG
+	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_PRODUCT_SRV
+
+
+Service Type: OData V2
+Type: Managed by SAP
+Release State:
+Deprecated with Release:
+Changed On: 2017.06.27
+Changed By: SAP
+Component: LO-MD-MM
+
+product Type:https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_producttype/srvd_a2x/sap/producttype/0001/
+product Group：https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_productgroup_2/srvd_a2x/sap/productgroup/0001/
+product：
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_product/srvd_a2x/sap/product/0002/
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_product/srvd_a2x/sap/product/0003/

@@ -1,0 +1,12 @@
+Field Catalog for Pricing in Sales – Read
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_slsprcgconditionfield/srvd_a2x/sap/slsprcgconditionfield/0001/
+Condition Table for Pricing in Sales – Read
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_slsprcgconditiontable/srvd_a2x/sap/slsprcgconditiontable/0001/
+Access Sequence for Pricing in Sales – Read
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_slsprcgaccesssequence/srvd_a2x/sap/slsprcgaccesssequence/0001/
+Condition Exclusion for Pricing in Sales – Read
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_slsprcgcndnexclusion/srvd_a2x/sap/slsprcgcndnexclusion/0001/

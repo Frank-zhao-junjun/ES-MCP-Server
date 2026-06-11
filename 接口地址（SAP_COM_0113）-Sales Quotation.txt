@@ -1,0 +1,4 @@
+Sales Quotation (A2X)
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_SALES_QUOTATION_SRV
+

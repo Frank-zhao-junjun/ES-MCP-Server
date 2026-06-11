@@ -1,0 +1,5 @@
+{
+    "agent-marketplace-sync.autoSync": true,
+    "agent-marketplace-sync.syncOnSave": true,
+    "chatCustomizationsEvaluations.model": "Qwen3.7-Plus"
+}

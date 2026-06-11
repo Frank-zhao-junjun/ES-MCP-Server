@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "sap-s4-mcp": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "cwd": "e:\\00 - 中数通ES环境\\ES 接口\\MCP Server",
+      "env": {
+        "MCP_API_KEY": "mcp-你的密钥请替换为实际值",
+        "SAP_CREDENTIALS_FILE": "e:\\00 - 中数通ES环境\\ES 接口\\user.txt",
+        "SAP_SCENARIO_DIR": "e:\\00 - 中数通ES环境\\ES 接口"
+      }
+    }
+  }
+}

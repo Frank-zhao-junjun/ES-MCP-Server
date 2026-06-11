@@ -1,0 +1,3 @@
+[sap-s4-mcp v0.1] MCP Server started via stdio
+[sap-s4-mcp] SAP credentials from: default user.txt
+[sap-s4-mcp] Ready for Agent connections

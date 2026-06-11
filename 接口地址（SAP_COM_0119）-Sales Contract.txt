@@ -1,0 +1,4 @@
+Sales Contract V4 (A2X)
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_salescontract/srvd_a2x/sap/salescontract/0001/
+

@@ -1,0 +1,3 @@
+sandbox：
+Request URL：
+https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder?top=50

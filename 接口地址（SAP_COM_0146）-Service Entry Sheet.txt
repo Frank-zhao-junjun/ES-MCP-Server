@@ -1,0 +1,3 @@
+Service Entry Sheet (Lean Services)
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_serviceentrysheet/srvd_a2x/sap/serviceentrysheet/0001/

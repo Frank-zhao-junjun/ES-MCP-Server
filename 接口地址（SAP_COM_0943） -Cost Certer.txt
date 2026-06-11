@@ -1,0 +1,2 @@
+SAP_COM_0943：Cost Center
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_cost_center/srvd_a2x/sap/costcenter/0001/

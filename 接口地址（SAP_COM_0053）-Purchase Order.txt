@@ -1,0 +1,15 @@
+Purchase Order Integration
+
+
+
+
+SAP_COM_0053
+Changed On:
+2025.01.16
+Deprecated with Release:
+–
+Component:
+MM-PUR-PO
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/
+ATTACHMENT:
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_CV_ATTACHMENT_SRV

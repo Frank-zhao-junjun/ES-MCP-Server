@@ -1,0 +1,6 @@
+Bills of Material
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV;v=0002
+Order Bills of Material
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_ORDER_BILL_OF_MATERIAL_SRV

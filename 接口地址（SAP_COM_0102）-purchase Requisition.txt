@@ -1,0 +1,8 @@
+Attachments
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_CV_ATTACHMENT_SRV
+
+Purchase Requisition
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition_2/srvd_a2x/sap/purchaserequisition/0001/
+

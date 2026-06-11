@@ -1,0 +1,3 @@
+Supplier Invoice:
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV
+attachment：https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_CV_ATTACHMENT_SRV

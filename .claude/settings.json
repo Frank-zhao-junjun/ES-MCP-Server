@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e 'console.log\\(encodeURIComponent\\(\"'\"\\)\\)')",
+      "Bash(cat)",
+      "Bash(node /tmp/test-encode.js)",
+      "Bash(node -e \"console.log\\(encodeURIComponent\\(String.fromCharCode\\(0x27\\)\\)\\)\")",
+      "Bash(node tests/run-tests.js)",
+      "Read(//e/00 - AI/00 - Skills/superpowers/**)",
+      "Read(//e/00 - AI/00 - Skills/speckit-superpowers-mvp/**)"
+    ]
+  }
+}

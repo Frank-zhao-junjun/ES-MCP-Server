@@ -1,0 +1,41 @@
+Scenario ID: SAP_COM_0104
+Scenario: Production Planning Integration
+Planned Order：
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_PLANNED_ORDERS
+
+Work Center：
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_WORK_CENTERS
+
+Material Planning Data - Read
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MRP_MATERIALS_SRV_01
+Planned Independent Requirements
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_PLND_INDEP_RQMT_SRV
+
+Production Order Confirmation
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_PROD_ORDER_CONFIRMATION_2_SRV
+
+Work Center
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_work_center/srvd_a2x/sap/workcenter/0001/
+Pooled Capacity
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_wrkctrpooledcapacity/srvd_a2x/sap/workcenterpooledcapacity/0001/
+Planned Order
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_plannedorder/srvd_a2x/sap/plannedorder/0001/
+Repetitive Manufacturing Confirmation
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_rptvmfgconfirmation/srvd_a2x/sap/repetitivemfgconfirmation/0001/
+
+
+Standard Work Formula Parameter Group ‒ Read
+OData V2	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_STDWRKFMLAPARAM_GROUP
+Production Order
+OData V4	
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/

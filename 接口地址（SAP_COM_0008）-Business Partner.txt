@@ -1,0 +1,26 @@
+Scenario ID: SAP_COM_0008
+Scenario: Business Partner, Customer and Supplier Integration
+## Business Partner (A2X)
+
+API_BUSINESS_PARTNER_0001_IWSG
+
+Service Type: OData V2
+Type: Managed by SAP
+Release State:
+Deprecated with Release:
+Changed On: 2016.08.19
+Changed By: SAP
+Component: LO-MD-BP
+read the master data for business partner, supplier or customer using this synchronous inbound service.
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BUSINESS_PARTNER
+
+
+Attachments :
+OData V2
+https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_CV_ATTACHMENT_SRV
+
+业务伙伴列表：BusinessPartner, BusinessPartnerName, BusinessPartnerCategory
+客户列表：Customer, CustomerName, CustomerAccountGroup
+客户详情：销售范围直接显示 SalesOrganization, DistributionChannel, Division
+财务信息：公司代码维度字段直接原样显示
+地址信息：地址接口返回什么就显示什么，不做本地结构化持久化
