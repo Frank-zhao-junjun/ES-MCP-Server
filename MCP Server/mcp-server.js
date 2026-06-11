@@ -25,6 +25,7 @@ const { traceSalesOrder } = require('./services/sales-order-trace');
 const { getCostCenter } = require('./services/cost-center');
 const { getProduct } = require('./services/product');
 const { getBusinessPartner } = require('./services/business-partner');
+const { getPurchaseOrder } = require('./services/purchase-order');
 
 const server = new McpServer({
     name: 'sap-s4-mcp',
@@ -469,6 +470,42 @@ Parameters:
             return textJson(toolSuccess('get_business_partner', data, warnings));
         } catch (err) {
             return textJson(toolFailure('get_business_partner', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_purchase_order
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_purchase_order',
+    `Query SAP Purchase Order header and items. Returns PO details including supplier, company code, status, and optionally line items with quantities/prices.
+
+Parameters:
+- purchaseOrder: PO number(s), single "4500000001" or comma-separated.
+- supplier: Supplier BP number.
+- companyCode: Company code.
+- purchaseOrderType: PO type (e.g. "NB" for standard).
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.`,
+    {
+        purchaseOrder: z.string().optional().describe('PO number(s), e.g. "4500000001" or "4500000001,4500000002"'),
+        supplier: z.string().optional().describe('Supplier BP number'),
+        companyCode: z.string().optional().describe('Company code'),
+        purchaseOrderType: z.string().optional().describe('PO type, e.g. "NB"'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+    },
+    wrapTool('get_purchase_order', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_purchase_order');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getPurchaseOrder(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No purchase orders found'] : [];
+            return textJson(toolSuccess('get_purchase_order', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_purchase_order', normalizeError(err, ErrorCodes.QUERY_FAILED)));
         }
     })
 );

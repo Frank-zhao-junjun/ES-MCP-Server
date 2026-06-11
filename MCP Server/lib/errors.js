@@ -10,10 +10,29 @@ const ErrorCodes = Object.freeze({
     QUERY_FAILED: 'QUERY_FAILED',
     SAP_NETWORK_ERROR: 'SAP_NETWORK_ERROR',
     SAP_TIMEOUT: 'SAP_TIMEOUT',
+    SAP_UNAVAILABLE: 'SAP_UNAVAILABLE',
     SCENARIO_NOT_FOUND: 'SCENARIO_NOT_FOUND',
     STATUS_FAILED: 'STATUS_FAILED',
     TRACE_PARTIAL_FAILURE: 'TRACE_PARTIAL_FAILURE',
 });
+
+function errorCodeFromSapStatus(status) {
+    switch (status) {
+        case 401:
+        case 403:
+            return ErrorCodes.AUTH_MISSING;
+        case 404:
+            return ErrorCodes.NO_ENDPOINT;
+        case 408:
+            return ErrorCodes.SAP_TIMEOUT;
+        case 502:
+        case 503:
+        case 504:
+            return ErrorCodes.SAP_UNAVAILABLE;
+        default:
+            return status >= 500 ? ErrorCodes.SAP_NETWORK_ERROR : ErrorCodes.INTERNAL;
+    }
+}
 
 function makeError(code, message, options = {}) {
     return {
@@ -41,4 +60,5 @@ module.exports = {
     ErrorCodes,
     makeError,
     normalizeError,
+    errorCodeFromSapStatus,
 };

@@ -11,6 +11,7 @@ const { traceSalesOrder } = require('../../services/sales-order-trace');
 const { getCostCenter } = require('../../services/cost-center');
 const { getProduct } = require('../../services/product');
 const { getBusinessPartner } = require('../../services/business-partner');
+const { getPurchaseOrder } = require('../../services/purchase-order');
 
 // ── 工具：从真实 HTTP 获取数据的 sapFetch ──
 function createRealSapFetch(baseUrl) {
@@ -136,6 +137,18 @@ async function testGetProductViaMock(mock) {
 }
 
 // ════════════════════════════════════════════════════
+// Purchase Order Integration Test
+// ════════════════════════════════════════════════════
+
+async function testGetPOViaMock(mock) {
+    const deps = { sapFetch: createRealSapFetch(mock.baseUrl), extractRows: createRealExtractRows() };
+    const r = await getPurchaseOrder({ purchaseOrder: '4500000001' }, deps);
+    assert.strictEqual(r.count, 1);
+    assert.strictEqual(r.purchaseOrders[0].Supplier, '1000001');
+    assert.strictEqual(r.purchaseOrders[0].items[0].Material, 'MAT001');
+}
+
+// ════════════════════════════════════════════════════
 // Business Partner Integration Test
 // ════════════════════════════════════════════════════
 
@@ -223,6 +236,7 @@ async function run() {
         await testGetCostCenterViaMock(mock);
         await testGetProductViaMock(mock);
         await testGetBPartnerViaMock(mock);
+        await testGetPOViaMock(mock);
         await testErrorHandling(mock);
         await testServiceDocumentFormats(mock);
 

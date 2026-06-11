@@ -208,6 +208,17 @@ async function createSapMockServer() {
         }));
     });
 
+    // V2 Purchase Order
+    mock.on(/PURCHASEORDER_PROCESS/, (req, res) => {
+        if (req.url.includes('A_PurchaseOrderItem')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ PurchaseOrder: '4500000001', PurchaseOrderItem: '10', Material: 'MAT001', OrderQuantity: '100' }] } }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ PurchaseOrder: '4500000001', Supplier: '1000001', CompanyCode: '1010', PurchaseOrderType: 'NB' }] } }));
+        }
+    });
+
     // V2 Business Partner
     mock.on(/API_BUSINESS_PARTNER/, (req, res) => {
         if (req.url.includes('A_Customer?')) {

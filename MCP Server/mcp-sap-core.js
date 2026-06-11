@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { ErrorCodes, makeError } = require('./lib/errors');
+const { ErrorCodes, makeError, errorCodeFromSapStatus } = require('./lib/errors');
 
 const SAP_BASE_URL = process.env.SAP_BASE_URL || 'https://my200967-api.s4hana.sapcloud.cn';
 const SAP_CLIENT = process.env.SAP_CLIENT || '100';
@@ -121,9 +121,10 @@ async function sapFetch(urlPath, context = defaultSapContext) {
         }
     }
 
-    const retryable = lastStatus === 401 || lastStatus === 403;
+    const code = lastStatus ? errorCodeFromSapStatus(lastStatus) : ErrorCodes.SAP_NETWORK_ERROR;
+    const retryable = lastStatus === 401 || lastStatus === 403 || lastStatus === 502 || lastStatus === 503 || lastStatus === 504;
     throw makeError(
-        lastStatus ? `SAP_HTTP_${lastStatus}` : ErrorCodes.SAP_NETWORK_ERROR,
+        code,
         lastBody.substring(0, 500) || `HTTP ${lastStatus || 'network error'}`,
         { sapStatus: lastStatus || undefined, retryable }
     );
