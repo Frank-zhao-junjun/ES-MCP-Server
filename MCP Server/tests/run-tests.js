@@ -14,6 +14,7 @@ const product = require('./unit/product.test');
 const businessPartner = require('./unit/business-partner.test');
 const purchaseOrder = require('./unit/purchase-order.test');
 const materialStock = require('./unit/material-stock.test');
+const bom = require('./unit/bom.test');
 const sapIntegration = require('./integration/sap-integration.test');
 
 async function main() {
@@ -36,6 +37,7 @@ async function main() {
     await businessPartner.run();
     await purchaseOrder.run();
     await materialStock.run();
+    await bom.run();
     console.log('');
 
     // ── Integration Tests ──

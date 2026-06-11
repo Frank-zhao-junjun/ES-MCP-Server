@@ -57,7 +57,49 @@ function buildBasicAuth(user, pass) {
     return Buffer.from(`${user}:${pass}`, 'utf8').toString('base64');
 }
 
-async function sapFetch(urlPath, context = defaultSapContext) {
+// ── Circuit Breaker ─────────────────────────────────
+
+const circuitBreaker = {
+    failures: 0,
+    lastFailure: 0,
+    state: 'CLOSED',
+    threshold: 3,
+    resetTimeoutMs: 30000,
+};
+
+function checkCircuitBreaker() {
+    if (circuitBreaker.state === 'OPEN') {
+        if (Date.now() - circuitBreaker.lastFailure < circuitBreaker.resetTimeoutMs) {
+            throw makeError(
+                ErrorCodes.SAP_UNAVAILABLE,
+                `SAP circuit breaker is OPEN after ${circuitBreaker.threshold} consecutive failures. Retry after ${Math.ceil((circuitBreaker.resetTimeoutMs - (Date.now() - circuitBreaker.lastFailure)) / 1000)}s`,
+                { retryable: true }
+            );
+        }
+        circuitBreaker.state = 'CLOSED';
+        circuitBreaker.failures = 0;
+    }
+}
+
+function recordCircuitBreakerFailure(err) {
+    if (!err.retryable) return;
+    circuitBreaker.failures++;
+    circuitBreaker.lastFailure = Date.now();
+    if (circuitBreaker.failures >= circuitBreaker.threshold) {
+        circuitBreaker.state = 'OPEN';
+    }
+}
+
+function resetCircuitBreaker() {
+    if (circuitBreaker.failures > 0 || circuitBreaker.state !== 'CLOSED') {
+        circuitBreaker.failures = 0;
+        circuitBreaker.state = 'CLOSED';
+    }
+}
+
+// ── Single SAP fetch (no retry) ─────────────────────
+
+async function sapFetchOnce(urlPath, context) {
     const { users, passwords } = getCredentials();
     if (!users.length || !passwords.length) {
         throw makeError(ErrorCodes.AUTH_MISSING, 'No SAP credentials found');
@@ -129,6 +171,33 @@ async function sapFetch(urlPath, context = defaultSapContext) {
         lastBody.substring(0, 500) || `HTTP ${lastStatus || 'network error'}`,
         { sapStatus: lastStatus || undefined, retryable }
     );
+}
+
+// ── Public sapFetch with retry + circuit breaker ────
+
+async function sapFetch(urlPath, context = defaultSapContext) {
+    checkCircuitBreaker();
+
+    const MAX_RETRIES = 2;
+    let lastErr = null;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const result = await sapFetchOnce(urlPath, context);
+            resetCircuitBreaker();
+            return result;
+        } catch (err) {
+            lastErr = err;
+            if (!err.retryable || attempt >= MAX_RETRIES) {
+                break;
+            }
+            const delay = 1000 * Math.pow(2, attempt);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+
+    recordCircuitBreakerFailure(lastErr);
+    throw lastErr;
 }
 
 function isV2(url) {

@@ -27,12 +27,20 @@ const { getProduct } = require('./services/product');
 const { getBusinessPartner } = require('./services/business-partner');
 const { getPurchaseOrder } = require('./services/purchase-order');
 const { getMaterialStock } = require('./services/material-stock');
+const { getBOM } = require('./services/bom');
+
+// Plugin system
+const DynamicLoader = require('./lib/dynamic-loader');
 
 const server = new McpServer({
     name: 'sap-s4-mcp',
     version: '0.3.0',
 });
 const runtimeContext = createRuntimeContext();
+
+// ── Plugin System Integration ───────────────────────────────────
+
+let dynamicLoader = null;
 
 // ── Observability ───────────────────────────────────
 
@@ -131,6 +139,8 @@ function requireAuthenticatedTool(toolName) {
         return textJson(toolFailure(toolName, normalizeError(err, ErrorCodes.AUTH_REQUIRED)));
     }
 }
+
+// ── Built-in Tools ──────────────────────────────────
 
 server.tool(
     'authenticate',
@@ -420,7 +430,7 @@ Parameters:
 - includeDescription: Include multilingual product descriptions (default true).
 - top: Max records, default 20, max 100.`,
     {
-        product: z.string().optional().describe('Material number(s), e.g. "MAT001" or "MAT001,MAT002"'),
+        product: z.string().optional().describe('Material number(s), e.g. "MAT001" or "MAT001,MAT001,MAT002"'),
         productType: z.string().optional().describe('Product type, e.g. "FERT", "HAWA", "ROH"'),
         productGroup: z.string().optional().describe('Product group code'),
         includeDescription: z.boolean().optional().default(true),
@@ -517,19 +527,21 @@ Parameters:
 
 server.tool(
     'get_material_stock',
-    `Query SAP Material Stock inventory levels. Returns stock quantities by material, plant, storage location, and batch.
+    `Query SAP Material Stock information. Returns stock levels across plants, storage locations, and batch information.
 
 Parameters:
-- material: Material number(s), single or comma-separated.
-- plant: Plant code.
-- storageLocation: Storage location code.
-- batch: Batch number.
+- material: Material number(s), single "MAT001" or comma-separated.
+- plant: Plant code filter.
+- storageLocation: Storage location code filter.
+- batch: Batch number filter.
+- includeBatchInfo: Include detailed batch information (default true).
 - top: Max records, default 20, max 100.`,
     {
         material: z.string().optional().describe('Material number(s), e.g. "MAT001" or "MAT001,MAT002"'),
-        plant: z.string().optional().describe('Plant code'),
-        storageLocation: z.string().optional().describe('Storage location'),
+        plant: z.string().optional().describe('Plant code, e.g. "1000"'),
+        storageLocation: z.string().optional().describe('Storage location code, e.g. "0001"'),
         batch: z.string().optional().describe('Batch number'),
+        includeBatchInfo: z.boolean().optional().default(true),
         top: z.number().min(1).max(MAX_TOP).optional().default(20),
     },
     wrapTool('get_material_stock', async (args) => {
@@ -537,7 +549,7 @@ Parameters:
         if (authFailure) return authFailure;
         try {
             const data = await getMaterialStock(args, sapDependencies(args._traceId));
-            const warnings = data.count === 0 ? ['No stock records found'] : [];
+            const warnings = data.count === 0 ? ['No material stock found'] : [];
             return textJson(toolSuccess('get_material_stock', data, warnings));
         } catch (err) {
             return textJson(toolFailure('get_material_stock', normalizeError(err, ErrorCodes.QUERY_FAILED)));
@@ -545,9 +557,150 @@ Parameters:
     })
 );
 
+// ────────────────────────────────────────────────────
+// Tool: get_bom
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_bom',
+    `Query SAP Bill of Materials (BOM). Returns BOM header and components for materials.
+
+Parameters:
+- material: Material number to get BOM for.
+- bomUsage: BOM usage filter (e.g. '1' for production, '2' for maintenance).
+- plant: Plant code for BOM validity.
+- includeComponents: Include BOM component details (default true).
+- top: Max records, default 20, max 100.`,
+    {
+        material: z.string().optional().describe('Material number, e.g. "MAT001"'),
+        bomUsage: z.string().optional().describe('BOM usage, e.g. "1" (production), "2" (maintenance)'),
+        plant: z.string().optional().describe('Plant code, e.g. "1000"'),
+        includeComponents: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+    },
+    wrapTool('get_bom', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_bom');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getBOM(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No BOM found for material'] : [];
+            return textJson(toolSuccess('get_bom', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_bom', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ── Plugin Management Tools ──────────────────────────────────
+
+server.tool(
+    'load_plugin',
+    `Load a plugin from a file path. This enables dynamic loading of new tools at runtime.
+
+Parameters:
+- pluginPath: Absolute or relative path to the plugin file.`,
+    {
+        pluginPath: z.string().min(1).describe('Path to the plugin file to load'),
+    },
+    wrapTool('load_plugin', async ({ pluginPath }) => {
+        if (!dynamicLoader) {
+            return textJson(toolFailure('load_plugin', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
+        }
+
+        try {
+            const result = await dynamicLoader.loadPluginFromFile(pluginPath);
+            
+            if (result.success) {
+                return textJson(toolSuccess('load_plugin', {
+                    loaded: result.loaded,
+                    message: `Successfully loaded plugin from ${pluginPath}`
+                }));
+            } else {
+                return textJson(toolFailure(
+                    'load_plugin',
+                    makeError(ErrorCodes.INTERNAL, 'Failed to load plugin', { errors: result.errors })
+                ));
+            }
+        } catch (err) {
+            return textJson(toolFailure('load_plugin', normalizeError(err, ErrorCodes.INTERNAL)));
+        }
+    })
+);
+
+server.tool(
+    'unload_plugin',
+    `Unload a plugin by its ID. This removes the plugin's tools from the server.
+
+Parameters:
+- pluginId: The ID of the plugin to unload.`,
+    {
+        pluginId: z.string().min(1).describe('ID of the plugin to unload'),
+    },
+    wrapTool('unload_plugin', async ({ pluginId }) => {
+        if (!dynamicLoader) {
+            return textJson(toolFailure('unload_plugin', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
+        }
+
+        try {
+            const success = await dynamicLoader.unloadPlugin(pluginId);
+            
+            if (success) {
+                return textJson(toolSuccess('unload_plugin', {
+                    pluginId,
+                    message: `Successfully unloaded plugin ${pluginId}`
+                }));
+            } else {
+                return textJson(toolFailure(
+                    'unload_plugin',
+                    makeError(ErrorCodes.INTERNAL, `Failed to unload plugin ${pluginId}`)
+                ));
+            }
+        } catch (err) {
+            return textJson(toolFailure('unload_plugin', normalizeError(err, ErrorCodes.INTERNAL)));
+        }
+    })
+);
+
+server.tool(
+    'list_loaded_plugins',
+    `List all currently loaded plugins and their tools.`,
+    {},
+    wrapTool('list_loaded_plugins', async () => {
+        if (!dynamicLoader) {
+            return textJson(toolFailure('list_loaded_plugins', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
+        }
+
+        try {
+            const plugins = dynamicLoader.listPlugins();
+            const dynamicTools = dynamicLoader.listDynamicTools();
+            
+            return textJson(toolSuccess('list_loaded_plugins', {
+                pluginCount: plugins.length,
+                plugins: plugins.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    version: p.version,
+                    description: p.description,
+                    toolCount: p.tools ? p.tools.length : 0
+                })),
+                dynamicToolCount: dynamicTools.length,
+                dynamicTools
+            }));
+        } catch (err) {
+            return textJson(toolFailure('list_loaded_plugins', normalizeError(err, ErrorCodes.INTERNAL)));
+        }
+    })
+);
+
 async function gracefulShutdown(transport) {
     isShuttingDown = true;
     console.error('[sap-s4-mcp] Shutting down gracefully...');
+    
+    // Shutdown plugin system
+    if (dynamicLoader) {
+        await dynamicLoader.shutdown();
+    }
+    
     while (activeRequests > 0) {
         console.error(`[sap-s4-mcp] Waiting for ${activeRequests} active request(s)...`);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -615,12 +768,30 @@ async function main() {
     validateStartupConfig();
     initAuth(runtimeContext.auth);
 
+    // Initialize plugin system
+    const pluginDirs = [path.join(__dirname, 'plugins'), path.join(__dirname, 'examples')];
+    dynamicLoader = new DynamicLoader(server, pluginDirs);
+    
+    // Load plugins from configured directories
+    try {
+        const loadResult = await dynamicLoader.loadPluginsFromDirs(pluginDirs);
+        if (loadResult.errors.length > 0) {
+            console.error('[sap-s4-mcp] Plugin loading errors:', loadResult.errors);
+        }
+        if (loadResult.loaded.length > 0) {
+            console.error(`[sap-s4-mcp] Loaded ${loadResult.loaded.length} plugins:`, loadResult.loaded.map(p => p.id));
+        }
+    } catch (err) {
+        console.error('[sap-s4-mcp] Error loading plugins:', err.message);
+    }
+
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error('[sap-s4-mcp v0.3] MCP Server started via stdio');
     console.error('[sap-s4-mcp] SAP credentials from:', process.env.SAP_CREDENTIALS_FILE || 'default user.txt');
     console.error('[sap-s4-mcp] Authentication enabled');
     console.error('[sap-s4-mcp] Debug tools:', isDebugToolEnabled() ? 'enabled' : 'disabled');
+    console.error('[sap-s4-mcp] Plugin system initialized with', dynamicLoader.listPlugins().length, 'plugins');
 
     process.on('SIGTERM', () => gracefulShutdown(transport));
     process.on('SIGINT', () => gracefulShutdown(transport));

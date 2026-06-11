@@ -208,6 +208,17 @@ async function createSapMockServer() {
         }));
     });
 
+    // V2 BOM
+    mock.on(/BILL_OF_MATERIAL_SRV/, (req, res) => {
+        if (req.url.includes('A_BillOfMaterialItem')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ BillOfMaterialItem: '0010', BillOfMaterialComponent: 'MAT002', ComponentQuantity: '5' }] } }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ BillOfMaterial: 'BOM001', Material: 'MAT001', Plant: '1010' }] } }));
+        }
+    });
+
     // V2 Material Stock
     mock.on(/MATERIAL_STOCK_SRV/, (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
