@@ -1,7 +1,9 @@
 /**
  * MCP Server Plugin Loader
  *
- * Handles dynamic loading and management of plugins from external modules
+ * Handles dynamic loading and management of plugins from external modules.
+ * Delegates all tool registration/unregistration to PluginManager,
+ * which uses the MCP SDK's RegisteredTool handles for proper lifecycle.
  */
 
 const fs = require('fs');
@@ -14,7 +16,7 @@ class PluginLoader {
         this.pluginDirs = pluginDirs;
         this.pluginManager = new PluginManager(server);
         this.activePlugins = new Map(); // pluginId -> module
-        this.watchers = new Map(); // plugin file path -> watcher
+        this.watchers = new Map();      // plugin file path -> { watcher, timeoutId }
     }
 
     /**
@@ -53,7 +55,6 @@ class PluginLoader {
                                     name: pluginModule.name
                                 });
 
-                                // Keep reference to module
                                 this.activePlugins.set(pluginModule.id, pluginModule);
                             } else {
                                 result.errors.push({
@@ -129,7 +130,7 @@ class PluginLoader {
      * @returns {Promise<boolean>}
      */
     async reloadPlugin(pluginId, pluginPath) {
-        // Unregister existing plugin
+        // Unregister existing plugin (truly removes tools from SDK registry)
         if (this.pluginManager.getPlugin(pluginId)) {
             await this.pluginManager.unregisterPlugin(pluginId);
             this.activePlugins.delete(pluginId);
@@ -165,7 +166,6 @@ class PluginLoader {
      */
     async watchPluginFile(pluginPath, debounceMs = 1000) {
         if (this.watchers.has(pluginPath)) {
-            // Already watching
             return;
         }
 
@@ -178,12 +178,18 @@ class PluginLoader {
                 }
 
                 timeoutId = setTimeout(async () => {
+                    // Clear the timeout reference so stopWatching can clean it up
+                    const entry = this.watchers.get(pluginPath);
+                    if (entry) entry.timeoutId = null;
+
                     try {
                         const stat = fs.statSync(pluginPath);
                         if (stat.size === 0) {
-                            // Skip if file is temporarily empty during write
                             return;
                         }
+
+                        // Clear require cache before reading the module
+                        delete require.cache[require.resolve(pluginPath)];
 
                         const pluginModule = require(pluginPath);
                         const plugin = pluginModule.default || pluginModule;
@@ -195,10 +201,14 @@ class PluginLoader {
                         console.error(`[plugin-loader] Error during hot reload of ${pluginPath}:`, error.message);
                     }
                 }, debounceMs);
+
+                // Store the timeoutId so we can clear it on stop
+                const entry = this.watchers.get(pluginPath);
+                if (entry) entry.timeoutId = timeoutId;
             }
         });
 
-        this.watchers.set(pluginPath, watcher);
+        this.watchers.set(pluginPath, { watcher, timeoutId: null });
         console.error(`[plugin-loader] Started watching plugin file: ${pluginPath}`);
     }
 
@@ -208,16 +218,19 @@ class PluginLoader {
      * @returns {void}
      */
     stopWatchingPluginFile(pluginPath) {
-        const watcher = this.watchers.get(pluginPath);
-        if (watcher) {
-            watcher.close();
+        const entry = this.watchers.get(pluginPath);
+        if (entry) {
+            if (entry.timeoutId) {
+                clearTimeout(entry.timeoutId);
+            }
+            entry.watcher.close();
             this.watchers.delete(pluginPath);
             console.error(`[plugin-loader] Stopped watching plugin file: ${pluginPath}`);
         }
     }
 
     /**
-     * Unload a plugin
+     * Unload a plugin (truly removes its tools from the MCP SDK registry)
      * @param {string} pluginId
      * @returns {Promise<boolean>}
      */
@@ -228,8 +241,9 @@ class PluginLoader {
             this.activePlugins.delete(pluginId);
 
             // Stop any file watchers for this plugin
-            for (const [filePath, watcher] of this.watchers) {
+            for (const [filePath, entry] of this.watchers) {
                 try {
+                    delete require.cache[require.resolve(filePath)];
                     const loadedModule = require(filePath);
                     const modulePlugin = loadedModule.default || loadedModule;
 
@@ -237,7 +251,7 @@ class PluginLoader {
                         this.stopWatchingPluginFile(filePath);
                     }
                 } catch (error) {
-                    // Ignore errors when checking module
+                    // Ignore errors when checking module — cache may be stale
                 }
             }
         }
@@ -272,24 +286,25 @@ class PluginLoader {
 
     /**
      * Shutdown the plugin loader
+     *
+     * Properly removes all plugin tools from the MCP SDK registry
+     * and runs each plugin's cleanup function.
+     *
      * @returns {Promise<void>}
      */
     async shutdown() {
-        // Stop all watchers
-        for (const [filePath, watcher] of this.watchers) {
-            watcher.close();
+        // Stop all watchers (clear pending timeouts too)
+        for (const [filePath, entry] of this.watchers) {
+            if (entry.timeoutId) {
+                clearTimeout(entry.timeoutId);
+            }
+            entry.watcher.close();
         }
         this.watchers.clear();
 
-        // Run cleanup for all active plugins
-        for (const [pluginId, pluginModule] of this.activePlugins) {
-            if (pluginModule.cleanup) {
-                try {
-                    await pluginModule.cleanup(this.server);
-                } catch (error) {
-                    console.error(`[plugin-loader] Error during plugin "${pluginId}" cleanup:`, error.message);
-                }
-            }
+        // Unregister every plugin — this removes tools from the SDK registry
+        for (const pluginId of this.activePlugins.keys()) {
+            await this.pluginManager.unregisterPlugin(pluginId);
         }
 
         this.activePlugins.clear();

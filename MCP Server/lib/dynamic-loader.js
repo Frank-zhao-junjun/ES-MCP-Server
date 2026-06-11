@@ -1,7 +1,10 @@
 /**
  * MCP Server Dynamic Loader
  *
- * Provides runtime loading/unloading of tools and plugins
+ * Provides runtime loading/unloading of tools and plugins.
+ * Delegates to PluginLoader for file/module loading and
+ * uses MCP SDK's RegisteredTool.remove()/disable()/enable()
+ * for true lifecycle management.
  */
 
 const path = require('path');
@@ -13,9 +16,12 @@ class DynamicLoader {
         this.pluginDirs = pluginDirs.map(dir => path.resolve(dir));
         this.pluginLoader = new PluginLoader(server, this.pluginDirs);
         this.dynamicTools = new Map(); // toolName -> { handler, parameters, description, pluginId }
-        this.originalTools = new Map(); // To track original server tools
     }
 
+    /**
+     * Check whether a plugin path is inside one of the allowed directories.
+     * Handles path traversal and normalises platform differences.
+     */
     isAllowedPluginPath(pluginPath) {
         const resolvedPath = path.resolve(pluginPath);
         const normalizePath = value => process.platform === 'win32' ? value.toLowerCase() : value;
@@ -40,7 +46,6 @@ class DynamicLoader {
         };
 
         try {
-            // Validate the plugin module
             const plugin = pluginModule.default || pluginModule;
 
             if (!plugin || typeof plugin !== 'object') {
@@ -48,14 +53,14 @@ class DynamicLoader {
                 return result;
             }
 
-            // Use plugin loader to register the plugin
+            // Delegate registration to PluginManager
             const success = await this.pluginLoader.getPluginManager().registerPlugin(plugin);
 
             if (success) {
                 result.success = true;
                 result.loaded = plugin.tools ? plugin.tools.map(t => t.name) : [];
 
-                // Track loaded tools for potential later unloading
+                // Mirror tools into our dynamic tracking map
                 for (const tool of plugin.tools || []) {
                     this.dynamicTools.set(tool.name, {
                         handler: tool.handler,
@@ -91,10 +96,14 @@ class DynamicLoader {
                 };
             }
 
-            // Clear require cache to enable hot reloading
-            delete require.cache[require.resolve(pluginPath)];
-
-            const pluginModule = require(pluginPath);
+            const pluginModule = await this.pluginLoader.loadPluginFromFile(pluginPath);
+            if (!pluginModule) {
+                return {
+                    success: false,
+                    loaded: [],
+                    errors: [`Failed to load plugin from file: ${pluginPath}`]
+                };
+            }
             return await this.loadPlugin(pluginModule, pluginPath);
         } catch (error) {
             return {
@@ -112,7 +121,14 @@ class DynamicLoader {
      */
     async loadPluginFromModule(moduleName) {
         try {
-            const pluginModule = require(moduleName);
+            const pluginModule = await this.pluginLoader.loadPluginFromModule(moduleName);
+            if (!pluginModule) {
+                return {
+                    success: false,
+                    loaded: [],
+                    errors: [`Failed to load plugin module: ${moduleName}`]
+                };
+            }
             return await this.loadPlugin(pluginModule, moduleName);
         } catch (error) {
             return {
@@ -124,13 +140,18 @@ class DynamicLoader {
     }
 
     /**
-     * Unload a plugin and its tools
+     * Unload a plugin and its tools.
+     *
+     * Delegates to PluginLoader.unloadPlugin() which in turn calls
+     * PluginManager.unregisterPlugin(). The manager calls
+     * `RegisteredTool.remove()` on each tool handle, so the tools
+     * truly disappear from the MCP `tools/list` response and a
+     * `notifications/tools/list_changed` is sent to all clients.
+     *
      * @param {string} pluginId - ID of the plugin to unload
      * @returns {Promise<boolean>}
      */
     async unloadPlugin(pluginId) {
-        // Since MCP SDK doesn't support removing tools directly,
-        // we'll just remove from our tracking and log a warning
         const plugin = this.pluginLoader.getPluginManager().getPlugin(pluginId);
 
         if (!plugin) {
@@ -138,11 +159,10 @@ class DynamicLoader {
             return false;
         }
 
-        // Attempt to unregister the plugin
         const success = await this.pluginLoader.unloadPlugin(pluginId);
 
         if (success) {
-            // Remove tools from our tracking
+            // Clean up our dynamic tracking map
             for (const tool of plugin.tools || []) {
                 this.dynamicTools.delete(tool.name);
             }
@@ -154,24 +174,31 @@ class DynamicLoader {
     }
 
     /**
-     * Load a single tool dynamically
+     * Load a single tool dynamically (not part of a plugin).
+     *
+     * Returns the RegisteredTool handle so callers can disable/enable/remove
+     * the tool later without going through a plugin.
+     *
      * @param {string} name - Tool name
      * @param {string} description - Tool description
      * @param {Object} parameters - Zod parameters schema
      * @param {Function} handler - Tool handler function
      * @param {string} [groupId] - Optional group ID for related tools
-     * @returns {boolean}
+     * @returns {{ handle: Object, ok: boolean }} SDK RegisteredTool handle + success flag
      */
     loadTool(name, description, parameters, handler, groupId = null) {
         if (this.dynamicTools.has(name)) {
-            console.warn(`[dynamic-loader] Tool "${name}" already exists, replacing...`);
+            console.warn(`[dynamic-loader] Tool "${name}" already exists, will be replaced via remove+re-register`);
+            // Remove the old one first so server.tool() won't throw
+            const oldHandle = this.pluginLoader.getPluginManager().getToolHandle(name);
+            if (oldHandle) {
+                oldHandle.remove();
+            }
         }
 
         try {
-            // Register the tool with the server
-            this.server.tool(name, description, parameters, handler);
+            const handle = this.server.tool(name, description, parameters, handler);
 
-            // Track the tool
             this.dynamicTools.set(name, {
                 handler,
                 parameters,
@@ -179,16 +206,24 @@ class DynamicLoader {
                 pluginId: groupId || 'dynamic'
             });
 
+            // Keep the handle in PluginManager too for consistent lookup
+            this.pluginLoader.getPluginManager().toolHandles.set(name, handle);
+            this.pluginLoader.getPluginManager().loadedTools.set(name, groupId || 'dynamic');
+
             console.error(`[dynamic-loader] Dynamically loaded tool "${name}"`);
-            return true;
+            return { handle, ok: true };
         } catch (error) {
             console.error(`[dynamic-loader] Failed to load tool "${name}":`, error.message);
-            return false;
+            return { handle: null, ok: false };
         }
     }
 
     /**
-     * Unload a dynamically loaded tool
+     * Unload a dynamically loaded tool.
+     *
+     * Uses the SDK's `RegisteredTool.remove()` so the tool is truly
+     * gone from `tools/list` and clients are notified.
+     *
      * @param {string} name - Tool name to unload
      * @returns {boolean}
      */
@@ -200,37 +235,44 @@ class DynamicLoader {
             return false;
         }
 
-        // Since MCP SDK doesn't support removing tools directly,
-        // we'll replace the handler with a disabled one
-        this.server.tool(
-            name,
-            '[DISABLED] This tool has been unloaded',
-            {},
-            async () => {
-                return {
-                    content: [{
-                        type: 'text',
-                        text: JSON.stringify({
-                            schemaVersion: '1.0',
-                            tool: name,
-                            ok: false,
-                            data: null,
-                            warnings: ['This tool has been dynamically unloaded'],
-                            error: {
-                                code: 'TOOL_UNLOADED',
-                                message: 'This tool has been dynamically unloaded',
-                                retryable: false
-                            }
-                        })
-                    }],
-                    isError: false
-                };
-            }
-        );
+        // Use the SDK handle to truly remove the tool
+        const handle = this.pluginLoader.getPluginManager().getToolHandle(name);
+        if (handle) {
+            handle.remove();   // removes from SDK registry + sends list_changed
+            this.pluginLoader.getPluginManager().toolHandles.delete(name);
+        }
 
         this.dynamicTools.delete(name);
-        console.error(`[dynamic-loader] Unloaded tool "${name}"`);
+        this.pluginLoader.getPluginManager().loadedTools.delete(name);
 
+        console.error(`[dynamic-loader] Unloaded tool "${name}"`);
+        return true;
+    }
+
+    /**
+     * Temporarily disable a tool without removing it.
+     * The tool still appears in tools/list but calls return an error.
+     * @param {string} name - Tool name
+     * @returns {boolean}
+     */
+    disableTool(name) {
+        const handle = this.pluginLoader.getPluginManager().getToolHandle(name);
+        if (!handle) return false;
+        handle.disable();
+        console.error(`[dynamic-loader] Disabled tool "${name}"`);
+        return true;
+    }
+
+    /**
+     * Re-enable a previously disabled tool.
+     * @param {string} name - Tool name
+     * @returns {boolean}
+     */
+    enableTool(name) {
+        const handle = this.pluginLoader.getPluginManager().getToolHandle(name);
+        if (!handle) return false;
+        handle.enable();
+        console.error(`[dynamic-loader] Enabled tool "${name}"`);
         return true;
     }
 
@@ -274,6 +316,8 @@ class DynamicLoader {
 
     async loadPluginsFromDirs(pluginDirs = this.pluginDirs) {
         const result = await this.pluginLoader.loadPluginsFromDirs(pluginDirs);
+
+        // Mirror into our dynamic tracking map
         for (const plugin of this.pluginLoader.getLoadedPlugins()) {
             for (const tool of plugin.tools || []) {
                 this.dynamicTools.set(tool.name, {
@@ -284,6 +328,7 @@ class DynamicLoader {
                 });
             }
         }
+
         return result;
     }
 
@@ -325,7 +370,15 @@ class DynamicLoader {
      * @returns {Promise<void>}
      */
     async shutdown() {
-        // Clean up plugin loader
+        // Remove all dynamically loaded tools from the SDK registry
+        for (const [name] of this.dynamicTools) {
+            const handle = this.pluginLoader.getPluginManager().getToolHandle(name);
+            if (handle) {
+                handle.remove();
+            }
+        }
+
+        // Clean up plugin loader (stops watchers, runs plugin cleanups)
         await this.pluginLoader.shutdown();
 
         // Clear our internal tracking

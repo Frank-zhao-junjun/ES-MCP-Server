@@ -1,7 +1,9 @@
 /**
  * MCP Server Plugin System
  *
- * Defines interfaces and utilities for plugin-based tool registration
+ * Defines interfaces and utilities for plugin-based tool registration.
+ * Uses MCP SDK's RegisteredTool.disable()/remove()/enable() for proper
+ * lifecycle management so that unloaded tools are truly hidden from clients.
  */
 
 const { z } = require('zod');
@@ -35,6 +37,10 @@ async function validatePlugin(plugin) {
 
     if (!plugin.id || typeof plugin.id !== 'string') {
         errors.push('Plugin must have a valid id string');
+    } else if (/^(?:__proto__|constructor|prototype)$/.test(plugin.id.trim())) {
+        errors.push('Plugin id must not be a reserved property name');
+    } else if (plugin.id.trim().length === 0) {
+        errors.push('Plugin id must not be empty or whitespace-only');
     }
 
     if (!plugin.name || typeof plugin.name !== 'string') {
@@ -67,7 +73,6 @@ async function validatePlugin(plugin) {
             if (!tool.parameters || typeof tool.parameters !== 'object') {
                 errors.push(`${prefix} must have a valid parameters object`);
             } else {
-                // Validate that parameters are Zod schemas
                 for (const [paramName, paramSchema] of Object.entries(tool.parameters)) {
                     if (!paramSchema || typeof paramSchema.parse !== 'function') {
                         errors.push(`${prefix}.parameters.${paramName} must be a Zod schema`);
@@ -96,13 +101,20 @@ async function validatePlugin(plugin) {
 }
 
 /**
- * Plugin manager class
+ * Plugin manager class.
+ *
+ * For every tool registered via `registerPlugin()`, we keep the
+ * `RegisteredTool` handle returned by `server.tool()`.  This handle
+ * exposes `disable()`, `enable()` and `remove()` methods from the
+ * MCP SDK, which properly update the tool list advertised to
+ * connected clients (via `notifications/tools/list_changed`).
  */
 class PluginManager {
     constructor(server) {
         this.server = server;
-        this.plugins = new Map(); // id -> plugin
-        this.loadedTools = new Map(); // toolName -> pluginId
+        this.plugins = new Map();          // id -> plugin
+        this.loadedTools = new Map();      // toolName -> pluginId
+        this.toolHandles = new Map();      // toolName -> RegisteredTool handle
     }
 
     /**
@@ -137,30 +149,59 @@ class PluginManager {
             }
         }
 
-        // Register all tools from the plugin
+        // Register all tools from the plugin, keeping track of handles for rollback
+        const registeredNames = [];
+
         for (const toolDef of plugin.tools) {
             if (this.loadedTools.has(toolDef.name)) {
-                console.error(`[plugin-manager] Tool name "${toolDef.name}" already exists`);
-                // Rollback: unregister previously registered tools from this plugin
-                for (const rollbackTool of plugin.tools) {
-                    if (rollbackTool.name !== toolDef.name) {
-                        this.server.unregisterTool?.(rollbackTool.name); // If MCP SDK supports this
+                console.error(`[plugin-manager] Tool name "${toolDef.name}" already registered by another plugin`);
+
+                // Rollback: remove every tool we just registered for this plugin
+                for (const name of registeredNames) {
+                    const handle = this.toolHandles.get(name);
+                    if (handle) {
+                        handle.remove();   // truly removes from SDK registry
+                        this.toolHandles.delete(name);
                     }
-                    break; // Just remove the one we added so far
+                    this.loadedTools.delete(name);
                 }
+
                 this.plugins.delete(plugin.id);
                 return false;
             }
 
-            // Register the tool with the server
-            this.server.tool(
-                toolDef.name,
-                toolDef.description,
-                toolDef.parameters,
-                toolDef.handler
-            );
+            // Register the tool — server.tool() returns a RegisteredTool handle.
+            // This may throw if the tool name already exists in the SDK (e.g.
+            // built-in tool or tool loaded outside of PluginManager).
+            let handle;
+            try {
+                handle = this.server.tool(
+                    toolDef.name,
+                    toolDef.description,
+                    toolDef.parameters,
+                    toolDef.handler
+                );
+            } catch (sdkError) {
+                console.error(`[plugin-manager] SDK rejected tool "${toolDef.name}": ${sdkError.message}`);
 
+                // Rollback: remove every tool we already registered for this plugin
+                for (const name of registeredNames) {
+                    const h = this.toolHandles.get(name);
+                    if (h) {
+                        h.remove();
+                        this.toolHandles.delete(name);
+                    }
+                    this.loadedTools.delete(name);
+                }
+
+                this.plugins.delete(plugin.id);
+                return false;
+            }
+
+            // Save the SDK handle so we can disable/remove later
+            this.toolHandles.set(toolDef.name, handle);
             this.loadedTools.set(toolDef.name, plugin.id);
+            registeredNames.push(toolDef.name);
         }
 
         console.error(`[plugin-manager] Successfully registered plugin "${plugin.id}" with ${plugin.tools.length} tools`);
@@ -168,7 +209,12 @@ class PluginManager {
     }
 
     /**
-     * Unregister a plugin and its tools
+     * Unregister a plugin and its tools.
+     *
+     * Uses the SDK's `remove()` method so that the tools disappear from
+     * `tools/list` and a `notifications/tools/list_changed` notification
+     * is sent to all connected clients.
+     *
      * @param {string} pluginId
      * @returns {Promise<boolean>} Success status
      */
@@ -179,21 +225,23 @@ class PluginManager {
             return false;
         }
 
-        // Note: MCP SDK doesn't currently support unregistering tools,
-        // so we'll just track what was loaded and warn about it
-
         // Run cleanup if provided
         if (plugin.cleanup) {
             try {
                 await plugin.cleanup(this.server);
             } catch (error) {
                 console.error(`[plugin-manager] Error during plugin "${pluginId}" cleanup:`, error.message);
-                // Don't return false here as the plugin is still unregistered
+                // Continue with unregister even if cleanup fails
             }
         }
 
-        // Remove from our tracking
+        // Remove every tool from the SDK registry via the saved handle
         for (const toolDef of plugin.tools) {
+            const handle = this.toolHandles.get(toolDef.name);
+            if (handle) {
+                handle.remove();   // truly removes from MCP SDK registry + sends list_changed
+                this.toolHandles.delete(toolDef.name);
+            }
             this.loadedTools.delete(toolDef.name);
         }
 
@@ -201,6 +249,16 @@ class PluginManager {
 
         console.error(`[plugin-manager] Unregistered plugin "${pluginId}"`);
         return true;
+    }
+
+    /**
+     * Get the RegisteredTool handle for a tool name.
+     * Useful for temporarily disabling a tool without removing it.
+     * @param {string} toolName
+     * @returns {Object|null} RegisteredTool handle or null
+     */
+    getToolHandle(toolName) {
+        return this.toolHandles.get(toolName) || null;
     }
 
     /**
