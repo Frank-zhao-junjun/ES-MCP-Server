@@ -251,10 +251,14 @@ async function discoverEntitySets(baseUrl, context = defaultSapContext) {
     return discovered;
 }
 
-function buildQueryPath(baseUrl, entityName, filter, top) {
+function buildQueryPath(baseUrl, entityName, filter, top, skip) {
     const t = Math.min(top || DEFAULT_TOP, MAX_TOP);
     const separator = baseUrl.includes('?') ? '&' : '?';
     let query = `${baseUrl}/${entityName}${separator}${isV2(baseUrl) ? '$format=json&' : ''}sap-client=${SAP_CLIENT}&$top=${t}`;
+
+    if (skip > 0) {
+        query += `&$skip=${skip}`;
+    }
 
     if (filter) {
         query += `&$filter=${encodeURIComponent(filter)}`;
@@ -342,7 +346,7 @@ function getScenarios() {
     return scenariosCache.value;
 }
 
-async function queryScenario(scenarioKey, filter, top, context = defaultSapContext) {
+async function queryScenario(scenarioKey, filter, top, skip, context = defaultSapContext) {
     const scenario = getScenarios().find(item => item.key === scenarioKey);
     if (!scenario) {
         throw makeError(ErrorCodes.SCENARIO_NOT_FOUND, `Unknown scenario key: ${scenarioKey}`);
@@ -352,7 +356,8 @@ async function queryScenario(scenarioKey, filter, top, context = defaultSapConte
     }
 
     const t = Math.min(top || DEFAULT_TOP, MAX_TOP);
-    const results = { scenario, objects: [], summary: {} };
+    const s = skip || 0;
+    const results = { scenario, objects: [], summary: {}, hasMore: false };
 
     for (const fullUrl of scenario.urls) {
         const base = new URL(fullUrl);
@@ -365,12 +370,16 @@ async function queryScenario(scenarioKey, filter, top, context = defaultSapConte
             if (results.summary[entityName] !== undefined) continue;
 
             try {
-                const data = await sapFetch(buildQueryPath(basePath, entityName, filter, t), context);
+                const data = await sapFetch(buildQueryPath(basePath, entityName, filter, t, s), context);
                 const rows = extractRows(data);
                 results.summary[entityName] = rows.length;
 
                 if (rows.length > 0) {
                     results.objects.push({ entityName, count: rows.length, rows });
+                }
+                // Heuristic: if rows.length == top, there may be more data
+                if (rows.length >= t) {
+                    results.hasMore = true;
                 }
             } catch (err) {
                 if (err.sapStatus !== 401 && err.sapStatus !== 403) {

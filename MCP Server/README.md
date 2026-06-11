@@ -10,6 +10,12 @@ MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-o
 - `list_sap_scenarios`: list configured SAP Communication Scenarios.
 - `query_sap_scenario`: debug/admin generic query tool. Disabled unless `MCP_ENABLE_DEBUG_TOOLS=true`.
 
+## New Enhancement Features
+
+- `load_plugin`: dynamically load new tools from plugin files.
+- `unload_plugin`: unload plugins and their tools at runtime.
+- `list_loaded_plugins`: list all currently loaded plugins and their tools.
+
 ## Install
 
 ```powershell
@@ -109,6 +115,7 @@ Error responses keep the same top-level schema:
 2. Use `get_sales_order_status` for direct Sales Order checks.
 3. Use `trace_sales_order` only when downstream lifecycle data is needed.
 4. Use `query_sap_scenario` only for debug/admin exploration and only when explicitly enabled.
+5. Use `load_plugin` to dynamically add new tools at runtime (optional).
 
 ## Architecture
 
@@ -119,6 +126,11 @@ Error responses keep the same top-level schema:
 - `services/`: business use cases independent from MCP protocol.
 - `lib/errors.js`: stable error codes and error normalization.
 - `lib/mcp-response.js`: stable MCP JSON response envelope.
+- `lib/plugin-system.js`: plugin interface definitions and validation.
+- `lib/plugin-loader.js`: plugin loading and lifecycle management.
+- `lib/dynamic-loader.js`: runtime plugin loading/unloading.
+- `docs/`: documentation including parameter validation rules and business logic.
+- `examples/`: plugin examples and development templates.
 - `tests/run-tests.js`: local no-network MVP regression tests.
 
 ## Validation
@@ -129,3 +141,17 @@ node --check mcp-server.js
 ```
 
 `npm test` does not call SAP. It validates response schema, context isolation, scenario key generation, and business service URL generation with fake SAP clients.
+
+## Plugin System
+
+The server now supports a plugin system that allows:
+
+- Dynamic loading of new tools at runtime
+- Plugin-based architecture for extensibility
+- Hot reloading of plugin code
+- Runtime management of plugins
+
+For more information about the plugin system, see:
+- `docs/plugin-system-guide.md` - Complete guide to using the plugin system
+- `examples/sample-plugin.js` - Example plugin implementation
+- `docs/enhancements-overview.md` - Overview of all enhancements made

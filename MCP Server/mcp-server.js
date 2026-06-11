@@ -28,6 +28,7 @@ const { getBusinessPartner } = require('./services/business-partner');
 const { getPurchaseOrder } = require('./services/purchase-order');
 const { getMaterialStock } = require('./services/material-stock');
 const { getBOM } = require('./services/bom');
+const { getSupplierInvoice } = require('./services/supplier-invoice');
 
 // Plugin system
 const DynamicLoader = require('./lib/dynamic-loader');
@@ -343,13 +344,15 @@ server.tool(
 Parameters:
 - key: Scenario key. Get valid keys from list_sap_scenarios.
 - filter: Optional OData filter string in plain text, e.g. "SalesOrder eq '19'".
-- top: Max records to return, default 20, max 100.`,
+- top: Max records to return, default 20, max 100.
+- skip: Number of records to skip (for pagination), default 0.`,
     {
         key: z.string().describe('Scenario key, e.g. "sap_com_0109_sales_order"'),
         filter: z.string().optional().describe('OData filter, e.g. "SalesOrder eq \'19\'"'),
         top: z.number().min(1).max(MAX_TOP).optional().describe('Max records, default 20, max 100'),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
     },
-    wrapTool('query_sap_scenario', async ({ key, filter, top }) => {
+    wrapTool('query_sap_scenario', async ({ key, filter, top, skip }) => {
         const authFailure = requireAuthenticatedTool('query_sap_scenario');
         if (authFailure) return authFailure;
 
@@ -361,16 +364,21 @@ Parameters:
         }
 
         try {
-            const result = await queryScenario(key, filter, top, runtimeContext.sap);
+            const result = await queryScenario(key, filter, top, skip, runtimeContext.sap);
             const summary = `Scenario: ${result.scenario.title} (${result.scenario.code})\nObjects found: ${result.objects.length}\nTotal records: ${result.objects.reduce((sum, object) => sum + object.count, 0)}`;
             const warnings = Object.keys(result.summary)
                 .filter(entityName => result.summary[entityName] === 0)
                 .map(entityName => `Entity "${entityName}" returned 0 records`);
 
+            if (result.hasMore) {
+                warnings.push('More records may be available. Use skip to paginate.');
+            }
+
             return textJson(toolSuccess('query_sap_scenario', {
                 summary,
                 scenario: result.scenario,
                 objects: result.objects,
+                hasMore: result.hasMore,
             }, warnings));
         } catch (err) {
             return textJson(toolFailure('query_sap_scenario', normalizeError(err, ErrorCodes.QUERY_FAILED)));
@@ -688,6 +696,38 @@ server.tool(
             }));
         } catch (err) {
             return textJson(toolFailure('list_loaded_plugins', normalizeError(err, ErrorCodes.INTERNAL)));
+        }
+    })
+);
+
+server.tool(
+    'get_supplier_invoice',
+    `Query SAP Supplier Invoice header and PO reference items. Returns invoice details including amount, currency, status, supplier, and optionally linked purchase order references.
+
+Parameters:
+- supplierInvoice: Invoice number(s), single or comma-separated.
+- fiscalYear: Fiscal year.
+- companyCode: Company code.
+- invoicingParty: Supplier (invoicing party) BP number.
+- includeItems: Include PO reference items (default true).
+- top: Max records, default 20, max 100.`,
+    {
+        supplierInvoice: z.string().optional().describe('Invoice number(s)'),
+        fiscalYear: z.string().optional().describe('Fiscal year, e.g. "2025"'),
+        companyCode: z.string().optional().describe('Company code'),
+        invoicingParty: z.string().optional().describe('Supplier BP number'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+    },
+    wrapTool('get_supplier_invoice', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_supplier_invoice');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getSupplierInvoice(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No supplier invoices found'] : [];
+            return textJson(toolSuccess('get_supplier_invoice', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_supplier_invoice', normalizeError(err, ErrorCodes.QUERY_FAILED)));
         }
     })
 );

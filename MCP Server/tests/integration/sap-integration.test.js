@@ -14,6 +14,7 @@ const { getBusinessPartner } = require('../../services/business-partner');
 const { getPurchaseOrder } = require('../../services/purchase-order');
 const { getMaterialStock } = require('../../services/material-stock');
 const { getBOM } = require('../../services/bom');
+const { getSupplierInvoice } = require('../../services/supplier-invoice');
 
 // ── 工具：从真实 HTTP 获取数据的 sapFetch ──
 function createRealSapFetch(baseUrl) {
@@ -145,6 +146,14 @@ async function testGetBOMViaMock(mock) {
     assert.strictEqual(r.billsOfMaterial[0].items[0].BillOfMaterialComponent, 'MAT002');
 }
 
+async function testGetInvoiceViaMock(mock) {
+    const deps = { sapFetch: createRealSapFetch(mock.baseUrl), extractRows: createRealExtractRows() };
+    const r = await getSupplierInvoice({ supplierInvoice: '5100000001' }, deps);
+    assert.strictEqual(r.count, 1);
+    assert.strictEqual(r.supplierInvoices[0].InvoiceGrossAmount, '1000.00');
+    assert.strictEqual(r.supplierInvoices[0].items[0].PurchaseOrder, '4500000001');
+}
+
 // ════════════════════════════════════════════════════
 // Material Stock Integration Test
 // ════════════════════════════════════════════════════
@@ -259,6 +268,7 @@ async function run() {
         await testGetPOViaMock(mock);
         await testGetStockViaMock(mock);
         await testGetBOMViaMock(mock);
+        await testGetInvoiceViaMock(mock);
         await testErrorHandling(mock);
         await testServiceDocumentFormats(mock);
 

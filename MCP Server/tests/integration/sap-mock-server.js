@@ -208,6 +208,17 @@ async function createSapMockServer() {
         }));
     });
 
+    // V2 Supplier Invoice
+    mock.on(/SUPPLIERINVOICE_PROCESS/, (req, res) => {
+        if (req.url.includes('A_SuplrInvcItemPurOrdRef')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ SupplierInvoice: '5100000001', PurchaseOrder: '4500000001', SupplierInvoiceItemAmount: '500.00' }] } }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ d: { results: [{ SupplierInvoice: '5100000001', FiscalYear: '2025', InvoiceGrossAmount: '1000.00', DocumentCurrency: 'CNY', InvoicingParty: '1000001' }] } }));
+        }
+    });
+
     // V2 BOM
     mock.on(/BILL_OF_MATERIAL_SRV/, (req, res) => {
         if (req.url.includes('A_BillOfMaterialItem')) {
