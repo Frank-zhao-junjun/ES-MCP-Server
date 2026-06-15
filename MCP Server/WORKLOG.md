@@ -21,7 +21,7 @@
   - `services/sales-order-trace.js` — `fetchAllPages()` + `getAllPages` 手动分页
   - `tests/unit/services.test.js` — MAX_TOP 50→100 断言更新
 - **新增配置**: `MCP_API_KEYS`, `SAP_CACHE_TTL_MS`, `MCP_AUTO_PAGE_MAX`, `MCP_METRICS_PORT`
-- **验证**: `node --check` 全文件通过，`npm test` 待手动确认
+- **验证**: `node --check` 全文件通过，`npm test` ✅ 全绿（含 4 个新模块）
 
 ### 2026-06-15 — v0.4 收尾：HTTP Transport 重构 + Metrics 修复 + 测试扩展 + 清理
 
@@ -39,7 +39,7 @@
   - `tests/run-tests.js` — 集成上述 4 个新测试模块
   - `package.json` — 版本 0.3.0 → 0.4.0
   - `_upgrade-v04.js` — 删除（一次性升级脚本，已完成使命）
-- **验证**: `node --check` 全文件通过，测试模块已集成到 runner
+- **验证**: `node --check` 全文件通过，`npm test` ✅ 全绿 273ms
 
 ### 2026-06-15 — 核心重构：认证增强 + 角色扩展 + 销售订单增强 + 服务端改进
 
@@ -350,7 +350,7 @@
 | User Stories 完成（MCP 工具） | 17 |
 | User Stories 登记（SAP API 资产） | 29 (US-API-001 ~ US-API-029) |
 | 工具数量 | 19 |
-| 测试通过 | 40 contract + 全量 unit/integration（含 4 个 v0.4 新模块） |
+| 测试通过 | 40 contract ✅ + 全量 unit/integration ✅（含 4 个 v0.4 新模块） |
 | 安全改造 | P0 (5 项) + 脱敏 (4 项) |
 | 工程化 | P1 (3 项) + P2 (4 项) |
 | 文档 | PRD + User Stories + Constitution + README + AGENT_USAGE + SAP API 清单 |
