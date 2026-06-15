@@ -9,7 +9,7 @@ MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-o
 | 文档 | 描述 | 面向 |
 |---|---|---|
 | [PRD.md](./docs/PRD.md) | 产品需求文档 | 所有人 |
-| [user-stories.md](./docs/user-stories.md) | 10 个 User Story + 验收标准 | 产品/开发 |
+| [user-stories.md](./docs/user-stories.md) | 17 个 User Story + 验收标准 | 产品/开发 |
 | [constitution.md](./.specify/memory/constitution.md) | 项目宪法 | 开发 |
 | [WORKLOG.md](./WORKLOG.md) | 工作日志 | 所有人 |
 | [AGENT_USAGE.md](./AGENT_USAGE.md) | Agent 调用规则与安全边界 | AI Agent |

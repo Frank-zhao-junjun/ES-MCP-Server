@@ -4,6 +4,17 @@
 
 ---
 
+### 2026-06-15 — 文档收尾：P2 孤岛清理 + 统计更新
+
+- **User Story**: —
+- **类型**: 文档收尾
+- **变更**:
+  - `tasks/task-plan.md` — 删除（内容已被 `docs/tasks.md` 完全覆盖，P2 #7）
+  - `README.md` — US 数量 10→17
+  - `WORKLOG.md` — 统计数字更新、审计项状态更新、新增本条目
+  - `docs/business-logic.md` — mermaid 图更新为 `createTraceContext` + `recordSapCall` 模式（P3 #10）
+- **验证**: 审计 10 项全部解决，WORKLOG 统计与代码一致，`npm test` 全绿
+
 ### 2026-06-15 — 文档口径统一 + 映射补全 + 数字修正
 
 - **User Story**: —
