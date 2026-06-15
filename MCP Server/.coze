@@ -1,0 +1,8 @@
+[project]
+sub_id = "bcc52dda"
+name = "ES-MCP-Server"
+requires = ["nodejs-20"]
+project_type = ""
+
+[preview]
+preview_enable = "disabled"

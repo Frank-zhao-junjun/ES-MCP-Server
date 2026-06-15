@@ -1,0 +1,9 @@
+[project]
+requires = ["nodejs-20"]
+project_type = ""
+
+[preview]
+preview_enable = "disabled"
+
+[subprojects]
+path = ["MCP Server"]
