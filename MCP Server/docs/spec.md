@@ -60,3 +60,19 @@
 - OAuth2SAML 替换 Basic Auth。
 - 字段级数据脱敏（客户邮箱、电话等）。
 - 多会话并发状态隔离（为 HTTP transport 做准备）。
+
+## 9. v0.5 Roadmap (Next)
+
+Status: 📋 Planning | Target: Q3 2026
+
+### v0.5 Goals
+- **全量 29 US-API 覆盖**：补齐剩余 12 个 API 模块（生产数据、质量检验、采购合同、供应商评估等）
+- **OAuth2 客户端凭据流**：替换 Basic Auth，支持 `SAP_OAUTH_CLIENT_ID` / `SAP_OAUTH_CLIENT_SECRET`
+- **HTTP/SSE MCP Streamable**：正式支持 HTTP transport，实现多会话并发
+- **租户级隔离**：`MCP_TENANT_ID` 环境变量，支持多租户独立配置
+
+### Out of Scope (v0.5)
+- SAP 写入 / 审批 / 改单
+- Web UI 仪表盘
+- 生产级分布式缓存 / Redis
+- 字段级数据脱敏
