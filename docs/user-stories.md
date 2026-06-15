@@ -459,14 +459,14 @@
 | US-API-001 | 主数据 | SAP_COM_0008 | V2 | `get_business_partner` | [003-master-data](../MCP%20Server/.specify/specs/003-master-data/spec.md) |
 | US-API-002 | 主数据 | SAP_COM_0009 | V2/V4 | `get_product` | [003-master-data](../MCP%20Server/.specify/specs/003-master-data/spec.md) |
 | US-API-003 | 采购 | SAP_COM_0053 | V4 | `get_purchase_order` | [002-business-apis](../MCP%20Server/.specify/specs/002-business-apis/spec.md) |
-| US-API-004 | 采购 | SAP_COM_0102 | V4 | — | roadmap |
-| US-API-005 | 采购 | SAP_COM_0101 / 0103 | V2 | — | roadmap |
+| US-API-004 | 采购 | SAP_COM_0102 | V4 | `get_purchase_requisition` | ✅ v0.4 |
+| US-API-005 | 采购 | SAP_COM_0101 / 0103 | V2 | `get_schedule_agreement` | ✅ v0.4 |
 | US-API-006 | 采购 | SAP_COM_0057 | V2 | `get_supplier_invoice` | [003-master-data](../MCP%20Server/.specify/specs/003-master-data/spec.md) |
 | US-API-007 | 采购 | SAP_COM_0113 | V2/V4 | — | roadmap |
 | US-API-008 | 采购 | SAP_COM_0122 / 0139 | V2 | — | roadmap |
 | US-API-009 | 采购 | SAP_COM_0146 | V4 | — | roadmap |
 | US-API-010 | 销售 | SAP_COM_0109 | V4 | `get_sales_order_status`, `trace_sales_order` | [002-business-apis](../MCP%20Server/.specify/specs/002-business-apis/spec.md) |
-| US-API-011 | 销售 | SAP_COM_0119 | V4 | — | roadmap |
+| US-API-011 | 销售 | SAP_COM_0119 | V4 | `get_sales_contract` | ✅ v0.4 |
 | US-API-012 | 销售 | SAP_COM_0113 / 0117 | V2/V4 | — | roadmap |
 | US-API-013 | 销售 | SAP_COM_0120 | V4 | `trace_sales_order` | [002-business-apis](../MCP%20Server/.specify/specs/002-business-apis/spec.md) |
 | US-API-014 | 销售 | SAP_COM_0294 | V4 | — | roadmap |
@@ -479,7 +479,7 @@
 | US-API-021 | 物流 | SAP_COM_0106 | V2 | `trace_sales_order` | [002-business-apis](../MCP%20Server/.specify/specs/002-business-apis/spec.md) |
 | US-API-022 | 物流 | SAP_COM_0108 | V2 | `trace_sales_order` | [002-business-apis](../MCP%20Server/.specify/specs/002-business-apis/spec.md) |
 | US-API-023 | 物流 | SAP_COM_0164 | V2 | `get_material_stock` | [003-master-data](../MCP%20Server/.specify/specs/003-master-data/spec.md) |
-| US-API-024 | 物流 | SAP_COM_0112 | V4 | — | roadmap |
+| US-API-024 | 物流 | SAP_COM_0112 | V4 | `get_material_reservation` | ✅ v0.4 |
 | US-API-025 | 物流 | SAP_COM_0107 | V4 | — | roadmap |
 | US-API-026 | 财务 | SAP_COM_0943 | V4 | `get_cost_center` | [003-master-data](../MCP%20Server/.specify/specs/003-master-data/spec.md) |
 | US-API-027 | 财务 | SAP_COM_0129 | V2 | — | roadmap |

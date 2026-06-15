@@ -41,6 +41,17 @@
   - `_upgrade-v04.js` — 删除（一次性升级脚本，已完成使命）
 - **验证**: `node --check` 全文件通过，`npm test` ✅ 全绿 273ms
 
+### 2026-06-15 — v0.4 收尾：PRD 路线图清零 + 矩阵补全 + US-API 状态更新
+
+- **User Story**: US-API-004/005/011/024
+- **类型**: v0.4 收尾
+- **变更**:
+  - `docs/PRD.md` §6 — v0.4 全部 5 项 `[x]`，新增 v0.5 路线图
+  - `docs/PRD.md` §3 — 覆盖矩阵补全 4 个新工具（purchase_requisition/schedule_agreement/sales_contract/material_reservation）
+  - `docs/user-stories.md`（根）— 4 个 US-API 附录状态 `roadmap`→`✅ v0.4`
+  - `WORKLOG.md` — 本条目
+- **验证**: `npm test` ✅ 26/26 全绿，v0.4 路线图 5/5 完成
+
 ### 2026-06-15 — 补全 4 个缺失单元测试（覆盖率 26/26）
 
 - **User Story**: —

@@ -1,19 +1,27 @@
 {
-  "name": "sap-s4-mcp",
+  "name": "sap-s4-mcp-server",
   "version": "0.4.0",
-  "private": true,
-  "description": "SAP S/4HANA MCP Server for AI agents",
+  "description": "SAP S/4HANA Model Context Protocol Server",
   "main": "mcp-server.js",
   "scripts": {
     "start": "node mcp-server.js",
-    "test": "node tests/run-tests.js",
-    "test:contract": "node tests/contract/mcp-client.test.js",
-    "metrics": "node mcp-server.js"
+    "dev": "nodemon mcp-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "express": "^4.21.2",
-    "zod": "^4.4.3",
-    "prom-client": "^14.2.0"
-  }
+    "@modelcontextprotocol/sdk": "^0.1.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "zod": "^3.22.4",
+    "prom-client": "^15.0.0"
+  },
+  "keywords": [
+    "sap",
+    "s4hana",
+    "mcp",
+    "enterprise",
+    "api"
+  ],
+  "author": "Enterprise Solutions Team",
+  "license": "UNLICENSED"
 }

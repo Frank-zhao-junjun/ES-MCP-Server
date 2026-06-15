@@ -65,6 +65,10 @@
 | `get_sales_order_status` | US-API-010 | SAP_COM_0109 | OData V4 |
 | `trace_sales_order` | US-API-010/013/015/021/022 | SAP_COM_0109/0120/0522/0106/0108 | V2+V4 |
 | `get_purchase_order` | US-API-003 | SAP_COM_0053 | OData V4（当前实现暂用 V2 服务 `API_PURCHASEORDER_PROCESS_SRV`） |
+| `get_purchase_requisition` | US-API-004 | SAP_COM_0102 | V4 |
+| `get_schedule_agreement` | US-API-005 | SAP_COM_0103 | V2 |
+| `get_sales_contract` | US-API-011 | SAP_COM_0119 | V4 |
+| `get_material_reservation` | US-API-024 | SAP_COM_0112 | V4 |
 | `get_product` | US-API-002 | SAP_COM_0009 | V2+V4 |
 | `get_business_partner` | US-API-001 | SAP_COM_0008 | V2 |
 | `get_material_stock` | US-API-023 | SAP_COM_0164 | V2 |
@@ -107,11 +111,10 @@
 - [x] SAP 响应缓存（`lib/sap-cache.js`, TTL 可配置）
 - [x] 分页自动合并（`lib/auto-pagination.js`, @odata.nextLink + $skip 回退）
 - [x] Prometheus metrics 端点（`lib/metrics-server.js`, /metrics + /healthz）
-- [ ] 补齐高优先级业务 API：采购申请（US-API-004）、采购框架协议（US-API-005）、销售合同（US-API-011）、库存预留（US-API-024）
+- [x] 补齐高优先级业务 API：采购申请（US-API-004）、采购框架协议（US-API-005）、销售合同（US-API-011）、库存预留（US-API-024）
 
-### v1.0
+### v0.5 (下一个)
 - [ ] HTTP/SSE 传输 (MCP Streamable)
 - [ ] OAuth2 客户端凭据流
 - [ ] 租户级隔离
-- [ ] 生产部署 guide
-- [ ] 覆盖全部 29 个 US-API 模块：补齐生产（US-API-016/017/019/020）、物流（US-API-025）、财务（US-API-027）、系统集成（US-API-028/029）等剩余场景
+- [ ] 覆盖全部 29 个 US-API 模块
