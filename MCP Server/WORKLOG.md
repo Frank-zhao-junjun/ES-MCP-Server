@@ -41,6 +41,17 @@
   - `_upgrade-v04.js` — 删除（一次性升级脚本，已完成使命）
 - **验证**: `node --check` 全文件通过，`npm test` ✅ 全绿 273ms
 
+### 2026-06-15 — 审计修复：PRD/US/Spec 与代码一致性同步
+
+- **User Story**: —
+- **类型**: 审计修复
+- **变更**:
+  - `docs/PRD.md` §2.2 — 认证行补充 `MCP_API_KEYS` 多键模式
+  - `docs/PRD.md` §6 v0.4 — 4 项 `[ ]`→`[x]`（多键/缓存/分页/metrics）
+  - `.specify/specs/005-v04-features/spec.md` — 新建，覆盖 4 个 v0.4 功能的技术规格
+  - `WORKLOG.md` — 本条目
+- **验证**: 审计 A-D 四类全部通过，doc ↔ code 一致
+
 ### 2026-06-15 — 核心重构：认证增强 + 角色扩展 + 销售订单增强 + 服务端改进
 
 - **User Story**: US-001, US-002, US-003, US-008

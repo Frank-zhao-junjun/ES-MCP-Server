@@ -50,7 +50,7 @@
 
 | 能力 | 实现 |
 |---|---|
-| 认证 | PSK (`MCP_API_KEY`) + 失败锁定 (5次/30s) |
+| 认证 | PSK (`MCP_API_KEY` 单键 / `MCP_API_KEYS` 多键+角色绑定) + 失败锁定 (5次/30s) |
 | 角色 | `MCP_ROLE`: readonly / debug / admin（默认 readonly）|
 | 限流 | 并发上限 5 + 每分钟 60 次 + 断路器 |
 | 脱敏 | SAP_BASE_URL 必填，无默认值 |
@@ -102,11 +102,11 @@
 
 ## 6. 路线图
 
-### v0.4 (下一个)
-- [ ] `MCP_API_KEY` 多键支持（多 Agent 不同角色）
-- [ ] SAP 响应缓存（TTL 可配置）
-- [ ] 分页自动合并
-- [ ] Prometheus metrics 端点
+### v0.4 (当前)
+- [x] `MCP_API_KEYS` 多键 + 角色绑定（`lib/roles.js` + `mcp-auth.js`）
+- [x] SAP 响应缓存（`lib/sap-cache.js`, TTL 可配置）
+- [x] 分页自动合并（`lib/auto-pagination.js`, @odata.nextLink + $skip 回退）
+- [x] Prometheus metrics 端点（`lib/metrics-server.js`, /metrics + /healthz）
 - [ ] 补齐高优先级业务 API：采购申请（US-API-004）、采购框架协议（US-API-005）、销售合同（US-API-011）、库存预留（US-API-024）
 
 ### v1.0
