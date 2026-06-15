@@ -85,6 +85,34 @@ The server runs over MCP stdio:
 npm start
 ```
 
+### HTTP/SSE Transport (v0.5)
+
+For multi-session concurrent access, enable HTTP/SSE transport:
+
+```powershell
+$env:MCP_ENABLE_HTTP_TRANSPORT="true"
+$env:MCP_PORT="3000"
+$env:MCP_BIND_ADDRESS="0.0.0.0"  # For Docker/K8s
+npm start
+```
+
+The server exposes:
+- `POST /mcp` — MCP Streamable HTTP endpoint
+- `GET /mcp` — MCP SSE stream
+- `GET /` — Health/info endpoint
+
+MCP clients can connect via HTTP:
+
+```json
+{
+  "mcpServers": {
+    "sap-s4-mcp-http": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
 ## Configuration
 
 Required environment variables:
@@ -104,6 +132,9 @@ Required environment variables:
 | `SAP_CACHE_TTL_MS` | No | SAP response cache TTL in milliseconds. Default `0` (disabled). Set to `300000` for 5-minute cache. |
 | `MCP_AUTO_PAGE_MAX` | No | Auto-pagination maximum total records. Default `0` (disabled). Hard cap at 5000. Set to `1000` to enable. |
 | `MCP_METRICS_PORT` | No | Prometheus metrics HTTP sidecar port. Default `0` (disabled). Exposes `/metrics` and `/healthz` endpoints. |
+| `MCP_ENABLE_HTTP_TRANSPORT` | No | Enable HTTP/SSE transport. Default `false` (stdio mode). Set to `true` for multi-session HTTP. |
+| `MCP_PORT` | No | HTTP server port when HTTP transport is enabled. Default `3000`. |
+| `MCP_BIND_ADDRESS` | No | HTTP server bind address. Default `127.0.0.1`. Use `0.0.0.0` for Docker/K8s. |
 
 Example `mcp.json`:
 

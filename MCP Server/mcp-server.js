@@ -1721,13 +1721,18 @@ async function main() {
             sessionIdGenerator: undefined, // Stateless mode
         });
 
-        // Mount MCP handler
-        expressApp.post('/mcp', (req, res) => {
-            httpTransport.handlePostMessage(req, res, req.body);
+        // Mount MCP handler - use handleRequest for both POST and GET
+        expressApp.post('/mcp', async (req, res) => {
+            await httpTransport.handleRequest(req, res, req.body);
         });
 
-        expressApp.get('/mcp', (req, res) => {
-            httpTransport.handleGetMessage(req, res);
+        expressApp.get('/mcp', async (req, res) => {
+            await httpTransport.handleRequest(req, res);
+        });
+
+        // Handle DELETE for session termination
+        expressApp.delete('/mcp', async (req, res) => {
+            await httpTransport.handleRequest(req, res);
         });
 
         // Create HTTP server

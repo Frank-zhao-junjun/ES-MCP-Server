@@ -4,6 +4,20 @@
 
 ---
 
+### 2026-06-15 — v0.5: HTTP/SSE 传输（目标 A）
+
+- **User Story**: US-001（MCP stdio 传输扩展）
+- **类型**: Feature — PRD v0.5 路线图目标 A
+- **变更**:
+  - `mcp-server.js` — 修复 HTTP 传输：`handlePostMessage`/`handleGetMessage` → `handleRequest`，添加 DELETE 端点
+  - `.env.example` — 新增 HTTP 传输环境变量：`MCP_ENABLE_HTTP_TRANSPORT`, `MCP_PORT`, `MCP_BIND_ADDRESS`
+  - `README.md` — 新增 HTTP/SSE 传输使用说明和客户端配置示例
+  - `tests/integration/http-transport.test.js` (**新建**) — HTTP 传输集成测试（4 个测试用例）
+- **新增配置**: `MCP_ENABLE_HTTP_TRANSPORT`, `MCP_PORT`, `MCP_BIND_ADDRESS`
+- **验证**: `npm test` ✅ 全绿（39 模块），HTTP 传输集成测试 ✅ 全绿（4 测试）
+
+---
+
 ### 2026-06-15 — v0.5: 补齐全部 29 个 US-API 模块（目标 D）
 
 - **User Story**: US-API-007/008/009/012/014/016/017/019/020/025/027/028/029
