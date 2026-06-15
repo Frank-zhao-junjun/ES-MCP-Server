@@ -87,6 +87,10 @@ Required environment variables:
 | `SAP_REQUEST_TIMEOUT_MS` | No | SAP request timeout. Defaults to `30000`. |
 | `MCP_ENABLE_DEBUG_TOOLS` | No | Set to `true` to enable `query_sap_scenario`. Defaults to disabled. |
 | `MCP_ENABLE_ADMIN_TOOLS` | No | Set to `true` to enable plugin management tools: `load_plugin`, `unload_plugin`, `list_loaded_plugins`. Defaults to disabled. |
+| `MCP_API_KEYS` | No | Multi-key authentication JSON: `{"key1": "readonly", "key2": "admin"}`. Takes precedence over `MCP_API_KEY`. Each key has its own role and lockout counter. |
+| `SAP_CACHE_TTL_MS` | No | SAP response cache TTL in milliseconds. Default `0` (disabled). Set to `300000` for 5-minute cache. |
+| `MCP_AUTO_PAGE_MAX` | No | Auto-pagination maximum total records. Default `0` (disabled). Hard cap at 5000. Set to `1000` to enable. |
+| `MCP_METRICS_PORT` | No | Prometheus metrics HTTP sidecar port. Default `0` (disabled). Exposes `/metrics` and `/healthz` endpoints. |
 
 Example `mcp.json`:
 

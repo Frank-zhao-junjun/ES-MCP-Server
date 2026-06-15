@@ -1,6 +1,6 @@
 # ── SAP S/4HANA MCP Server Dockerfile ─────────────────
-# Build:  docker build -t sap-s4-mcp:0.3.0 .
-# Run:    docker run -i --rm --env-file .env sap-s4-mcp:0.3.0
+# Build:  docker build -t sap-s4-mcp:0.4.0 .
+# Run:    docker run -i --rm --env-file .env sap-s4-mcp:0.4.0
 # ──────────────────────────────────────────────────────
 
 FROM node:20-alpine AS build
