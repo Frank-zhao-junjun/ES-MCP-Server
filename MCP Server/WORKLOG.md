@@ -4,6 +4,17 @@
 
 ---
 
+### 2026-06-15 — US-Spec-PRD Spec 文档补齐
+
+- **User Story**: US-001 ~ US-010
+- **变更**:
+  - `.specify/specs/001-core-infrastructure/spec.md` — Auth, Health, Roles, Rate Limiting 技术规格
+  - `.specify/specs/002-business-apis/spec.md` — SalesOrder, Trace, PurchaseOrder 技术规格
+  - `.specify/specs/003-master-data/spec.md` — Product, BP, Stock, BOM, CostCenter, Invoice, Schema 技术规格
+  - `.specify/specs/004-plugin-deployment/spec.md` — Plugin System, Docker, Observability 技术规格
+  - `README.md` — Documentation 表新增 Specs 入口
+- **验证**: 4 个 Spec 覆盖全部 19 个工具 + 基础设施，与现有代码一致
+
 ### 2026-06-15 — US-Spec-PRD 文档体系建立
 
 - **User Story**: 全部 (US-001 ~ US-010)
