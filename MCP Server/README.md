@@ -9,7 +9,7 @@ MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-o
 | 文档 | 描述 | 面向 |
 |---|---|---|
 | [PRD.md](./docs/PRD.md) | 产品需求文档 | 所有人 |
-| [user-stories.md](./docs/user-stories.md) | 17 个 User Story + 验收标准 | 产品/开发 |
+| [user-stories.md](./docs/user-stories.md) | 21 个 User Story + 验收标准 | 产品/开发 |
 | [constitution.md](./.specify/memory/constitution.md) | 项目宪法 | 开发 |
 | [WORKLOG.md](./WORKLOG.md) | 工作日志 | 所有人 |
 | [AGENT_USAGE.md](./AGENT_USAGE.md) | Agent 调用规则与安全边界 | AI Agent |
@@ -42,6 +42,10 @@ Business tools:
 - `get_bom`: query SAP Bill of Materials data.
 - `get_supplier_invoice`: query SAP Supplier Invoice data.
 - `get_cost_center`: query SAP Cost Center master data.
+- `get_purchase_requisition`: query SAP Purchase Requisition header and items.
+- `get_schedule_agreement`: query SAP Schedule Agreement header and items with delivery schedules.
+- `get_sales_contract`: query SAP Sales Contract header and items.
+- `get_material_reservation`: query SAP Material Reservation header and items.
 - `get_entity_schema`: inspect SAP OData entity fields from service metadata.
 - `list_sap_scenarios`: list configured SAP Communication Scenarios.
 
@@ -157,7 +161,7 @@ Error responses keep the same top-level schema:
 
 1. Call `authenticate` with `api_key`.
 2. Call `health_check` if the Agent needs to verify configuration or SAP connectivity.
-3. Use business tools such as `get_sales_order_status`, `get_purchase_order`, `get_product`, or `get_material_stock` for normal read-only queries.
+3. Use business tools such as `get_sales_order_status`, `get_purchase_order`, `get_purchase_requisition`, `get_schedule_agreement`, `get_sales_contract`, `get_material_reservation`, `get_product`, or `get_material_stock` for normal read-only queries.
 4. Use `trace_sales_order` only when downstream lifecycle data is needed.
 5. Use `get_entity_schema` before building complex filters against unfamiliar OData entities.
 6. Use `query_sap_scenario` only for debug/admin exploration and only when explicitly enabled.

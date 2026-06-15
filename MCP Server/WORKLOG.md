@@ -196,7 +196,7 @@
   - `.specify/specs/003-master-data/spec.md` — Product, BP, Stock, BOM, CostCenter, Invoice, Schema 技术规格
   - `.specify/specs/004-plugin-deployment/spec.md` — Plugin System, Docker, Observability 技术规格
   - `README.md` — Documentation 表新增 Specs 入口
-- **验证**: 4 个 Spec 覆盖全部 17 个内置工具 + 基础设施，与现有代码一致
+- **验证**: 4 个 Spec 覆盖全部 21 个内置工具 + 基础设施，与现有代码一致
 
 ### 2026-06-15 — US-Spec-PRD 文档体系建立
 
@@ -297,7 +297,7 @@
 
 - **User Story**: US-001 ~ US-007 (原有 MVP)
 - **基线**:
-  - `mcp-server.js` — MCP 协议适配，17 个注册工具
+  - `mcp-server.js` — MCP 协议适配，21 个注册工具
   - `mcp-sap-core.js` — SAP OData 客户端 + 场景解析
   - `mcp-auth.js` — API Key 认证 + 失败锁定
   - `services/` — 9 个业务服务（SalesOrder, PurchaseOrder, Product, BOM, Stock, BP, Invoice, CostCenter, EntitySchema）

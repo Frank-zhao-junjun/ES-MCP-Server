@@ -72,7 +72,48 @@
 - 现有的 API 调用方式不变
 - 现有的配置选项仍然有效
 
-## 6. 未来扩展
+## 6. v0.4 新增特性 (2026-06)
+
+### 6.1 多密钥认证 + 角色绑定
+- `MCP_API_KEYS` JSON 多密钥支持，每个密钥独立角色
+- 每密钥独立失败计数器与锁定
+- 向后兼容单密钥 `MCP_API_KEY` 模式
+
+**相关文件：** `mcp-auth.js`, `lib/roles.js`
+
+### 6.2 SAP 响应缓存
+- TTL 内存缓存 (`SAP_CACHE_TTL_MS`, 默认 5 分钟)
+- URL 规范化去重
+- 401/403 自动清空缓存
+- 缓存命中率统计
+
+**相关文件：** `lib/sap-cache.js`
+
+### 6.3 自动分页合并
+- `@odata.nextLink` 自动追踪
+- `$skip` 回退分页
+- 可配置最大总条数 (`MCP_AUTO_PAGE_MAX`)
+- 可通过 `MCP_ENABLE_AUTO_PAGE` 开关
+
+**相关文件：** `lib/auto-pagination.js`
+
+### 6.4 Prometheus 指标端点
+- `/metrics` 端点 (Prometheus text 格式)
+- `/healthz` 健康检查端点
+- 请求数、成功率、p50/p95 延迟、SAP 调用统计
+- 可选端口 (`MCP_METRICS_PORT`)
+
+**相关文件：** `lib/metrics-server.js`
+
+### 6.5 新增业务 API 工具
+- `get_purchase_requisition` — 采购申请查询 (US-API-004)
+- `get_schedule_agreement` — 采购框架协议查询 (US-API-005)
+- `get_sales_contract` — 销售合同查询 (US-API-011)
+- `get_material_reservation` — 库存预留查询 (US-API-024)
+
+**相关文件：** `services/purchase-requisition.js`, `services/schedule-agreement.js`, `services/sales-contract.js`, `services/material-reservation.js`
+
+## 7. 未来扩展
 
 此增强为基础，支持：
 - 第三方插件生态系统

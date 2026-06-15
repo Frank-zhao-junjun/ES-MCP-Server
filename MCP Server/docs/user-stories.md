@@ -1,8 +1,8 @@
 # User Stories — SAP S/4HANA MCP Server
 
-> 版本: 0.3.0 | 更新: 2026-06-15
+> 版本: 0.4.0 | 更新: 2026-06-15
 
-> **📋 交叉引用**：本文档描述 MCP 工具层的产品级用户故事。
+> **📋 交叉引用**：本文档描述 MCP 工具层的产品级用户故事（共 21 个 US）。
 > 底层 SAP API 模块的资产清单见 [../../docs/user-stories.md](../../docs/user-stories.md)（US-API-001 ~ US-API-029，按主数据/采购/销售/生产/物流/财务/系统集成 8 大类编排）。
 
 ## 角色定义
@@ -333,6 +333,86 @@
 
 ---
 
+## US-018: 查询采购申请
+
+**As** 业务 Agent
+**I want** 按采购申请号/采购组织/采购组/供应商查询采购申请
+**So that** 我能回答"采购申请 PR1000001 的审批状态和行项目是什么"
+
+### Acceptance Criteria
+- [x] `get_purchase_requisition("1000001")` 返回 PR 头 + 行项目
+- [x] 支持按采购组织/采购组/供应商过滤
+- [x] 多值逗号分隔查询
+- [x] `includeItems=true` 返回行项目明细
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_purchase_requisition`
+- SAP API: [US-API-004](../../docs/user-stories.md#us-api-004-采购申请同步)
+
+---
+
+## US-019: 查询采购框架协议
+
+**As** 业务 Agent
+**I want** 按框架协议号/供应商查询采购框架协议（Schedule Agreement）
+**So that** 我能回答"供应商 X 的框架协议 5500000001 的交货计划是什么"
+
+### Acceptance Criteria
+- [x] `get_schedule_agreement("5500000001")` 返回协议头 + 交货计划行项目
+- [x] 支持按供应商/采购组织/采购组过滤
+- [x] 多值逗号分隔查询
+- [x] `includeItems=true` 返回行项目（含交货计划）
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_schedule_agreement`
+- SAP API: [US-API-005](../../docs/user-stories.md#us-api-005-采购框架协议同步)
+
+---
+
+## US-020: 查询销售合同
+
+**As** 业务 Agent
+**I want** 按销售合同号/客户/销售组织查询销售合同
+**So that** 我能回答"客户 X 的销售合同 4000000001 的有效期和行项目是什么"
+
+### Acceptance Criteria
+- [x] `get_sales_contract("4000000001")` 返回合同头 + 行项目
+- [x] 支持按客户/销售组织/分销渠道/产品组过滤
+- [x] 多值逗号分隔查询
+- [x] `includeItems=true` 返回行项目明细
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_sales_contract`
+- SAP API: [US-API-011](../../docs/user-stories.md#us-api-011-销售合同同步)
+
+---
+
+## US-021: 查询库存预留
+
+**As** 业务 Agent
+**I want** 按预留号/物料/工厂查询物料预留
+**So that** 我能回答"工厂 1010 中物料 FG10 的预留 10000001 状态是什么"
+
+### Acceptance Criteria
+- [x] `get_material_reservation("10000001")` 返回预留头 + 行项目
+- [x] 支持按物料/工厂/需求号过滤
+- [x] 多值逗号分隔查询
+- [x] `includeItems=true` 返回行项目（含需求数量/移动类型）
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_material_reservation`
+- SAP API: [US-API-024](../../docs/user-stories.md#us-api-024-库存预留查询)
+
+---
+
 ## 状态摘要
 
 | US | 标题 | 状态 |
@@ -354,3 +434,7 @@
 | US-015 | 查询成本中心 | ✅ 完成 |
 | US-016 | SAP 场景管理 | ✅ 完成 |
 | US-017 | 插件系统管理 | ✅ 完成 |
+| US-018 | 查询采购申请 | ✅ 完成 |
+| US-019 | 查询采购框架协议 | ✅ 完成 |
+| US-020 | 查询销售合同 | ✅ 完成 |
+| US-021 | 查询库存预留 | ✅ 完成 |

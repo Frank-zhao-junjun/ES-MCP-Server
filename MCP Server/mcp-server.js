@@ -279,7 +279,7 @@ Parameters:
         // ── 未认证：仅返回最小状态，不泄露配置细节 ──
         if (!authenticated) {
             return textJson(toolSuccess('health_check', {
-                server: { ok: true, version: '0.3.0', uptimeSeconds: metrics.getMetrics().uptimeSeconds },
+                server: { ok: true, version: '0.4.0', uptimeSeconds: metrics.getMetrics().uptimeSeconds },
                 auth: { ok: false },
                 debugToolsEnabled: isDebugToolEnabled(),
                 adminToolsEnabled: isAdminToolEnabled(),
@@ -289,7 +289,7 @@ Parameters:
         // ── 已认证：返回完整健康信息 ──
         const warnings = [];
         const checks = {
-            server: { ok: true, version: '0.3.0', uptimeSeconds: metrics.getMetrics().uptimeSeconds },
+            server: { ok: true, version: '0.4.0', uptimeSeconds: metrics.getMetrics().uptimeSeconds },
             auth: { ok: true },
             debugToolsEnabled: isDebugToolEnabled(),
             adminToolsEnabled: isAdminToolEnabled(),

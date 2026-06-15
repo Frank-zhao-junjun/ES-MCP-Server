@@ -81,3 +81,59 @@
   - T9: Propagate request traceId to SAP X-Request-ID header (commit `bfa341d`)
 - Checks run: `node tests/run-tests.js` ✅, `npm run test:contract` ✅ 40/40
 - Remaining risks: — (全部完成，无剩余风险)
+
+---
+
+## v0.4 Feature Tasks (2026-06)
+
+### Mapping
+
+- FR-001 (MCP_API_KEYS 多键) → T10
+- FR-002 (SAP 响应缓存) → T11
+- FR-003 (自动分页) → T12
+- FR-004 (Prometheus 指标) → T13
+- FR-005 (采购申请) → T14
+- FR-006 (采购框架协议) → T15
+- FR-007 (销售合同) → T16
+- FR-008 (库存预留) → T17
+
+### Tasks
+
+- [x] T10: 实现 `MCP_API_KEYS` 多键认证 + 每键角色绑定
+  - Files: `mcp-auth.js` (`_parseMultiKeys()`), `lib/roles.js`
+  - Verification: 多键 JSON 解析正确；无效 JSON 回退单键模式
+
+- [x] T11: 实现 SAP 响应 TTL 缓存
+  - Files: `lib/sap-cache.js`
+  - Verification: 缓存命中返回存储响应；TTL 过期重新获取；401/403 清空缓存
+
+- [x] T12: 实现自动分页合并
+  - Files: `lib/auto-pagination.js`
+  - Verification: `@odata.nextLink` 自动追踪；`$skip` 回退；`MCP_ENABLE_AUTO_PAGE` 开关
+
+- [x] T13: 实现 Prometheus 指标端点
+  - Files: `lib/metrics-server.js`
+  - Verification: `/metrics` 返回 Prometheus 格式；`/healthz` 返回 200
+
+- [x] T14: 新增 `get_purchase_requisition` 工具 (US-API-004)
+  - Files: `services/purchase-requisition.js`, `mcp-server.js`
+  - Verification: 按 PR 号/采购组织/供应商查询返回正确数据
+
+- [x] T15: 新增 `get_schedule_agreement` 工具 (US-API-005)
+  - Files: `services/schedule-agreement.js`, `mcp-server.js`
+  - Verification: 按协议号/供应商查询返回交货计划
+
+- [x] T16: 新增 `get_sales_contract` 工具 (US-API-011)
+  - Files: `services/sales-contract.js`, `mcp-server.js`
+  - Verification: 按合同号/客户查询返回合同行项目
+
+- [x] T17: 新增 `get_material_reservation` 工具 (US-API-024)
+  - Files: `services/material-reservation.js`, `mcp-server.js`
+  - Verification: 按预留号/物料/工厂查询返回预留数据
+
+### Done Log (v0.4)
+
+- Date: 2026-06-15
+- Completed task IDs: T10–T17
+- Checks run: `npm test` ✅
+- Remaining risks: — (全部完成，无剩余风险)

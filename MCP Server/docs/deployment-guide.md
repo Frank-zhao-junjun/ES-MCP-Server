@@ -1,4 +1,4 @@
-# Deployment Guide — SAP S/4HANA MCP Server v0.3.0
+# Deployment Guide — SAP S/4HANA MCP Server v0.4.0
 
 > 面向运维人员的生产部署 step-by-step 指南。
 
@@ -95,7 +95,7 @@ MCP Server 通过 stdio 与 MCP 客户端通信，不监听网络端口。
 
 ```powershell
 # 构建
-docker build -t sap-s4-mcp:0.3.0 .
+docker build -t sap-s4-mcp:0.4.0 .
 
 # 运行
 docker run -i --rm \
@@ -104,7 +104,7 @@ docker run -i --rm \
   -v /path/to/scenarios:/scenarios:ro \
   -e SAP_CREDENTIALS_FILE=/secrets/user.txt \
   -e SAP_SCENARIO_DIR=/scenarios \
-  sap-s4-mcp:0.3.0
+  sap-s4-mcp:0.4.0
 ```
 
 ## 7. Kubernetes 部署
@@ -130,7 +130,7 @@ spec:
     spec:
       containers:
       - name: mcp
-        image: sap-s4-mcp:0.3.0
+        image: sap-s4-mcp:0.4.0
         envFrom:
         - secretRef:
             name: sap-mcp-secrets

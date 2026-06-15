@@ -1,5 +1,10 @@
 # Feature Spec: MCP Server Phase 2 & 3
 
+> **Status**: ✅ Complete (2026-06-11) | **Superseded by**: [.specify/specs/005-v04-features/spec.md](../.specify/specs/005-v04-features/spec.md) for v0.4 features
+>
+> All 9 tasks (T1–T9) completed. See [tasks.md](./tasks.md) for completion log.
+> Current architecture: v0.4.0 — see [PRD.md](./PRD.md) for latest roadmap.
+
 ## 1. Problem
 
 - Current pain: Phase 1 已完成安全加固，但代码仍存在架构耦合、配置硬编码、缓存永不过期、无分页、无 Schema 元数据等问题，影响扩展性和 Agent 体验。

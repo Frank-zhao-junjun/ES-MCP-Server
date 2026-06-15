@@ -1,6 +1,6 @@
 # PRD — SAP S/4HANA MCP Server
 
-> 版本: 0.3.0 | 更新: 2026-06-15 | 状态: MVP 完成 → 生产加固
+> 版本: 0.4.0 | 更新: 2026-06-15 | 状态: v0.4 完成 → v0.5 规划中
 
 ## 1. 产品概述
 
@@ -58,7 +58,7 @@
 
 ## 3. API 覆盖矩阵
 
-本 MCP Server 的 17 个内置工具覆盖了以下 SAP Communication Scenarios（业务工具 + 调试/管理工具）：
+本 MCP Server 的 21 个内置工具覆盖了以下 SAP Communication Scenarios（业务工具 + 调试/管理工具）：
 
 | MCP 工具 | 覆盖的 US-API | SAP_COM | 协议 |
 |---|---|---|---|
