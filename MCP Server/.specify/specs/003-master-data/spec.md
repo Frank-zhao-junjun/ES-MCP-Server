@@ -3,6 +3,8 @@
 > **Status**: ✅ Complete | **Version**: 0.3 | **Owner**: Backend
 >
 > Covers: US-005 (Stock), US-007 (Schema); plus Product, BP, CostCenter, BOM, SupplierInvoice
+>
+> **SAP API Mapping**: US-API-001 (BP), US-API-002 (Product), US-API-006 (Invoice), US-API-018 (BOM), US-API-023 (Stock), US-API-026 (CostCenter)
 
 ## 1. Functional Requirements
 

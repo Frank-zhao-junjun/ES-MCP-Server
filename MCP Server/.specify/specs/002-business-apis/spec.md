@@ -3,6 +3,8 @@
 > **Status**: ✅ Complete | **Version**: 0.3 | **Owner**: Backend
 >
 > Covers: US-002 (Sales Order), US-003 (Trace), US-004 (Purchase Order)
+>
+> **SAP API Mapping**: US-API-003 (PO), US-API-010 (SO), US-API-013 (Billing), US-API-021 (Delivery)
 
 ## 1. Functional Requirements
 

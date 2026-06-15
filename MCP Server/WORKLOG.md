@@ -4,6 +4,43 @@
 
 ---
 
+### 2026-06-15 — US-Spec-PRD 三层联动更新
+
+- **User Story**: 全部 10 个 US + 29 个 US-API
+- **变更**:
+  - `docs/PRD.md` — 新增 §3 API 覆盖矩阵（MCP 工具 ↔ SAP_COM ↔ US-API 映射表）
+  - `docs/user-stories.md` — 头部新增交叉引用入口，指向 ../../docs/user-stories.md (US-API-001~029)
+  - `.specify/specs/002-business-apis/spec.md` — 补充 SAP API Mapping 行
+  - `.specify/specs/003-master-data/spec.md` — 补充 SAP API Mapping 行
+  - `WORKLOG.md` — 本条目
+- **验证**: 三层文档交叉引用完整：PRD → API Inventory ← User Stories ← Specs
+
+### 2026-06-15 — 接口清单 US 编号重命名 + 定位说明
+
+- **User Story**: 全部 32 个 SAP Communication Scenarios
+- **变更**:
+  - `docs/user-stories.md` — 头部新增"定位说明"段，明确本文档与 `MCP Server/docs/user-stories.md` 的并列关系
+  - `docs/user-stories.md` — 29 个 User Story 编号批量重命名 `US-001~US-029` → `US-API-001~US-API-029`，避免与 MCP Server 文档 `US-xxx` 冲突
+  - Node 脚本 `_rename.js` + 日志 `_rename_log.txt` — 任务完成后已 trash 清理
+- **验证**:
+  - `grep '^### US-' docs/user-stories.md` 返回 29 行全部为 `US-API-xxx` 格式，零遗漏
+  - 临时脚本已回收，工作区干净
+
+---
+
+### 2026-06-15 — SAP 接口资产清单审阅
+
+- **User Story**: 全部 32 个 SAP Communication Scenarios
+- **变更**:
+  - `docs/user-stories.md`（新增于 ES 接口根目录）— 32 个 API 模块资产清单，编号 `US-API-001 ~ US-API-029`
+  - 按业务域分 8 大类：主数据/采购/销售/生产/物流/财务/系统集成/API 状态追踪
+  - 附录：API 端点状态表（10 个端点探测结果）+ Scenario ID 清单总表
+- **定位**: 与 `MCP Server/docs/user-stories.md` 并列存在——后者是 MCP 工具产品视角，前者是 SAP 系统侧 API 资产视角
+- **验证**: 编号体系 `US-API-xxx` 避免与 MCP Server 文档的 `US-xxx` 冲突
+- **下次继续**: 是否将接口清单并入 MCP Server `docs/api-inventory.md` 附录，待定
+
+---
+
 ### 2026-06-15 — US-Spec-PRD Spec 文档补齐
 
 - **User Story**: US-001 ~ US-010
@@ -125,13 +162,96 @@
 
 ---
 
+### 2026-06-15 — 文档体系全面审阅
+
+- **User Story**: —
+- **类型**: 文档审计
+- **范围**: 全量 19 个 .md 文件 (PRD, US, 8 Specs, Constitution, README, AGENT_USAGE, WORKLOG, 6 辅助文档)
+- **方法**: 交叉验证三层文档间引用 + 代码-文档一致性 grep 检查
+
+#### P0 — 结构性冲突 (需立即修复)
+
+1. **双重 Spec 目录** — `.specify/specs/` (4 个 capability-group spec) 与 `specs/` (4 个 per-feature spec) 并存，内容重叠：
+   - `specs/cost-center/spec.md` ↔ `.specify/specs/003-master-data/spec.md` FR-005
+   - `specs/product/spec.md` ↔ `.specify/specs/003-master-data/spec.md` FR-001
+   - `specs/observability/spec.md` ↔ `.specify/specs/004-plugin-deployment/spec.md` FR-004
+   - `specs/testing/spec.md` — 无对应，但内容与 Constitution §5 重叠
+   - **建议**: `specs/` 是早期草稿，`.specify/specs/` 是正式体系。将 `specs/testing/spec.md` 迁移到 `.specify/specs/005-testing/spec.md`，删除 `specs/` 目录。
+
+2. **`docs/tasks.md` 全部 unchecked** — T1~T9 显示 `[ ]` 未完成，但 WORKLOG 和 git log 确认全部在 6/11~6/15 期间完成（T3, T4, T6, T7, T8, T9 各有对应 commit）。
+   - **建议**: 将所有 checkbox 改为 `[x]`，并在 Done Log 中补充完成日期。
+
+#### P1 — 内容缺口 (建议近期修复)
+
+3. **7 个工具缺少 User Story** — `get_product`、`get_business_partner`、`get_bom`、`get_supplier_invoice`、`get_cost_center`、`list_sap_scenarios`、`query_sap_scenario` 无对应 US。
+   - PRD §2.1 表格列出了它们，Spec 003 有技术规格，但缺少 US-011~US-017 的用户视角描述。
+   - **建议**: 至少为前 5 个业务工具补 US-011~US-015；`list_sap_scenarios` 和 `query_sap_scenario` 可归入运维 US。
+
+4. **`health_check` 的 `includeScenarios` 参数未文档化** — 代码 (`mcp-server.js:219-222`) 实际接受 `includeScenarios` 参数，但 US-006 验收标准、`parameter-validation-rules.md` §2、`AGENT_USAGE.md` 工具表均只提及 `includeSapCheck`。
+   - **建议**: 更新 US-006 AC 和 parameter-validation-rules.md。
+
+5. **版本号不一致**:
+   - `docs/user-stories.md`: 版本 1.0
+   - `docs/PRD.md`: 版本 0.3
+   - `.specify/specs/001~004`: 版本 0.3
+   - `.specify/memory/constitution.md`: 无版本号
+   - `package.json`: 版本 0.3.0
+   - **建议**: 统一为 0.3.0，Constitution 补版本号。
+
+#### P2 — 冗余与孤岛 (中期清理)
+
+6. **`docs/improvement-plan.md` 冗余** — 内容（插件系统计划）已在 `docs/enhancements-overview.md` 中覆盖且后者更新。`improvement-plan.md` 是 2026-06-11 的计划文档，全部完成。
+   - **建议**: 归档或删除，README 不引用。
+
+7. **`tasks/task-plan.md` 孤岛** — 独立目录，无任何文档引用，内容与 `docs/tasks.md` 重叠（都是插件系统 T1~T7）。
+   - **建议**: 合并到 `docs/tasks.md` 或删除。
+
+8. **README Documentation 表缺失 7 个文档入口**:
+   - `docs/business-logic.md` (mermaid 流程图)
+   - `docs/parameter-validation-rules.md` (每个工具的参数表)
+   - `docs/plugin-system-guide.md` (README §Plugin System 提到但 Documentation 表无链接)
+   - `docs/enhancements-overview.md`
+   - `docs/improvement-plan.md` (如保留)
+   - `docs/spec.md` (Phase 2 & 3 规格)
+   - `docs/tasks.md` (任务追踪)
+   - **建议**: 在 README Documentation 表中新增 "详细文档" 分组。
+
+#### P3 — 轻微代码-文档不一致 (可择机修复)
+
+9. **`MAX_TOP` 双重标准** — `mcp-sap-core.js` 导出 `MAX_TOP=100`，`mcp-server.js` Zod schema 使用该值校验所有工具。但 `services/sales-order-status.js` 和 `services/sales-order-trace.js` 内部硬编码 `MAX_TOP=50`。
+   - Zod 层允许 top=80 通过，但 service 层静默截断为 50。与 Spec 002 (top max 50) 一致但实现方式不一致。
+   - **建议**: 为 sales-order 工具在 `mcp-server.js` 中单独注册 `z.number().max(50)`，或统一 service 层使用 `mcp-sap-core` 的常量。
+
+10. **`docs/business-logic.md` mermaid 部分与实际代码脱节**:
+    - `sapDependencies` 已重构为 `createTraceContext` + `recordSapCall`
+    - `server.tool()` 注册模式描述过于简化（缺少 Zod schema、`wrapTool` 细节）
+    - **建议**: 更新 mermaid 图以匹配当前 `wrapTool` → `createTraceContext` → `recordSapCall` 链路。
+
+#### ✅ 正面确认
+
+| 检查项 | 结果 |
+|---|---|
+| US → Spec 覆盖矩阵 | 10/10 US 有对应 Spec |
+| PRD → US 引用一致性 | PRD §2.1 工具表与 US 一致 |
+| Spec AC 与 US AC 对齐 | 4 个 Spec 的 AC 均可追溯到 US |
+| Constitution §6.1 三层流程 | PRD → US → Spec 在宪法中正确定义 |
+| AGENT_USAGE.md 错误码 | 11 个错误码全部与 `lib/errors.js` 一致 |
+| 测试覆盖率文档 | Constitution §5.1 三层测试与实际 tests/ 目录一致 |
+| WORKLOG 完整性 | 10 条记录，最早基线到最新 Spec 补齐 |
+| git 敏感文件 | `git ls-files` 零敏感文件 ✅ |
+
+- **验证**: 交叉引用矩阵完整，Constitution §6.1 三层流程与实际一致，AGENT_USAGE 与代码实现匹配。
+- **待处理**: P0×2, P1×3, P2×3, P3×2 — 共 10 项发现。
+
+---
 ## 统计
 
 | 指标 | 数值 |
 |---|---|
-| User Stories 完成 | 10 |
+| User Stories 完成（MCP 工具） | 10 |
+| User Stories 登记（SAP API 资产） | 29 (US-API-001 ~ US-API-029) |
 | 工具数量 | 19 |
 | 测试通过 | 40 contract + 全量 unit/integration |
 | 安全改造 | P0 (5 项) + 脱敏 (4 项) |
 | 工程化 | P1 (3 项) + P2 (4 项) |
-| 文档 | PRD + User Stories + Constitution + README + AGENT_USAGE |
+| 文档 | PRD + User Stories + Constitution + README + AGENT_USAGE + SAP API 清单 |

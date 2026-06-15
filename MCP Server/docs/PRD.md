@@ -56,7 +56,27 @@
 | 脱敏 | SAP_BASE_URL 必填，无默认值 |
 | 审计 | 结构化 JSON 日志 (requestId/traceId/tool/duration) |
 
-## 3. 非目标 (v0.x)
+## 3. API 覆盖矩阵
+
+本 MCP Server 的 19 个工具覆盖了以下 SAP Communication Scenarios：
+
+| MCP 工具 | 覆盖的 US-API | SAP_COM | 协议 |
+|---|---|---|---|
+| `get_sales_order_status` | US-API-010 | SAP_COM_0109 | OData V4 |
+| `trace_sales_order` | US-API-010/013/015/021/022 | SAP_COM_0109/0120/0106/0108 | V2+V4 |
+| `get_purchase_order` | US-API-003 | SAP_COM_0053 | OData V4 |
+| `get_product` | US-API-002 | SAP_COM_0009 | V2+V4 |
+| `get_business_partner` | US-API-001 | SAP_COM_0008 | V2 |
+| `get_material_stock` | US-API-023 | SAP_COM_0164 | V2 |
+| `get_bom` | US-API-018 | SAP_COM_0105 | V2 |
+| `get_supplier_invoice` | US-API-006 | SAP_COM_0057 | V2 |
+| `get_cost_center` | US-API-026 | SAP_COM_0943 | V4 |
+| `get_entity_schema` | 全部 | 全部 | V2+V4 |
+| `list_sap_scenarios` | 全部 29 个 API | 30+ SAP_COM | — |
+
+> 完整 29 个 API 模块清单见 [../../docs/user-stories.md](../../docs/user-stories.md)（US-API-001 ~ US-API-029）
+
+## 4. 非目标 (v0.x)
 
 - SAP 写入/审批/改单 ❌
 - 多租户支持 ❌
@@ -64,7 +84,7 @@
 - OAuth2/SAML 认证 ❌
 - 缓存层 ❌
 
-## 4. 架构决策记录
+## 5. 架构决策记录
 
 | ADR | 决策 | 原因 |
 |---|---|---|
@@ -74,7 +94,7 @@
 | 4 | express 仅保留 (未用于 MCP) | 根 server.js 是历史遗留 Web UI |
 | 5 | 插件系统 | 允许无重启扩展工具 |
 
-## 5. 路线图
+## 6. 路线图
 
 ### v0.4 (下一个)
 - [ ] `MCP_API_KEY` 多键支持（多 Agent 不同角色）

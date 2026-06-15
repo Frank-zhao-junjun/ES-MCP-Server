@@ -1,6 +1,9 @@
 # User Stories — SAP S/4HANA MCP Server
 
-> 版本: 1.0 | 更新: 2026-06-15
+> 版本: 1.1 | 更新: 2026-06-15
+
+> **📋 交叉引用**：本文档描述 MCP 工具层的产品级用户故事。
+> 底层 SAP API 模块的资产清单见 [../../docs/user-stories.md](../../docs/user-stories.md)（US-API-001 ~ US-API-029，按主数据/采购/销售/生产/物流/财务/系统集成 8 大类编排）。
 
 ## 角色定义
 
