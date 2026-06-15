@@ -34,6 +34,7 @@ _scan_*.js
 _search_*.js
 _v2_*.js
 query_outbound_delivery.js
+query_delivery.js
 
 # ── 编辑器 / 临时文件 ──
 *.xlsx
