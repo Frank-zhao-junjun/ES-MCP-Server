@@ -53,7 +53,7 @@
 │   │   ├── dynamic-loader.js      # 动态加载器
 │   │   ├── plugin-loader.js       # 插件加载器
 │   │   └── plugin-system.js       # 插件系统核心
-│   ├── services/                  # 业务工具服务
+│   ├── services/                  # 业务工具服务（27 个）
 │   │   ├── sales-order-status.js
 │   │   ├── sales-order-trace.js
 │   │   ├── purchase-order.js
@@ -67,12 +67,25 @@
 │   │   ├── bom.js
 │   │   ├── supplier-invoice.js
 │   │   ├── cost-center.js
-│   │   └── entity-schema.js
+│   │   ├── entity-schema.js
+│   │   ├── purchase-rfq.js        # US-API-007
+│   │   ├── supplier-evaluation.js # US-API-008
+│   │   ├── service-entry-sheet.js # US-API-009
+│   │   ├── sales-quotation.js     # US-API-012
+│   │   ├── sales-pricing-condition.js # US-API-014
+│   │   ├── production-data.js     # US-API-016
+│   │   ├── production-order-confirmation.js # US-API-017
+│   │   ├── routing.js             # US-API-019
+│   │   ├── inspection-data.js     # US-API-020
+│   │   ├── physical-inventory.js  # US-API-025
+│   │   ├── activity-type.js       # US-API-027
+│   │   ├── attachment.js          # US-API-028
+│   │   └── iam-user-role.js       # US-API-029
 │   ├── config/                    # 配置文件
 │   │   └── trace-config.json      # 追踪步骤配置
 │   ├── tests/                     # 测试目录
 │   │   ├── run-tests.js           # 测试运行器
-│   │   ├── unit/                  # 单元测试（26 个模块）
+│   │   ├── unit/                  # 单元测试（39 个模块）
 │   │   ├── integration/           # 集成测试
 │   │   └── contract/              # 契约测试
 │   ├── scripts/                   # 工具脚本

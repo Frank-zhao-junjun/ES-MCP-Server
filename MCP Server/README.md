@@ -48,6 +48,19 @@ Business tools:
 - `get_material_reservation`: query SAP Material Reservation header and items.
 - `get_entity_schema`: inspect SAP OData entity fields from service metadata.
 - `list_sap_scenarios`: list configured SAP Communication Scenarios.
+- `get_purchase_rfq`: query SAP Purchase RFQ (Request for Quotation) header and items.
+- `get_supplier_evaluation`: query SAP Supplier Evaluation scorecard and items.
+- `get_service_entry_sheet`: query SAP Service Entry Sheet header and items.
+- `get_sales_quotation`: query SAP Sales Quotation header and items.
+- `get_sales_pricing_condition`: query SAP Sales Pricing Condition records.
+- `get_production_data`: query SAP Production Data (planned orders, work centers, MRP).
+- `get_production_order_confirmation`: query SAP Production Order Confirmation data.
+- `get_routing`: query SAP Routing header and operations.
+- `get_inspection_data`: query SAP Inspection Data (methods, characteristics, plans).
+- `get_physical_inventory`: query SAP Physical Inventory documents and items.
+- `get_activity_type`: query SAP Activity Type master data.
+- `get_attachment`: query SAP Attachment metadata.
+- `get_iam_user_role`: query SAP IAM User and Role data.
 
 Admin/debug tools:
 

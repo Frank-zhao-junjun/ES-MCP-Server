@@ -29,6 +29,19 @@ const purchaseRequisition = require('./unit/purchase-requisition.test');
 const scheduleAgreement = require('./unit/schedule-agreement.test');
 const salesContract = require('./unit/sales-contract.test');
 const materialReservation = require('./unit/material-reservation.test');
+const purchaseRfq = require('./unit/purchase-rfq.test');
+const supplierEvaluation = require('./unit/supplier-evaluation.test');
+const serviceEntrySheet = require('./unit/service-entry-sheet.test');
+const salesQuotation = require('./unit/sales-quotation.test');
+const salesPricingCondition = require('./unit/sales-pricing-condition.test');
+const productionData = require('./unit/production-data.test');
+const productionOrderConfirmation = require('./unit/production-order-confirmation.test');
+const routing = require('./unit/routing.test');
+const inspectionData = require('./unit/inspection-data.test');
+const physicalInventory = require('./unit/physical-inventory.test');
+const activityType = require('./unit/activity-type.test');
+const attachment = require('./unit/attachment.test');
+const iamUserRole = require('./unit/iam-user-role.test');
 const sapIntegration = require('./integration/sap-integration.test');
 
 async function main() {
@@ -66,6 +79,19 @@ async function main() {
     await scheduleAgreement.run();
     await salesContract.run();
     await materialReservation.run();
+    await purchaseRfq.run();
+    await supplierEvaluation.run();
+    await serviceEntrySheet.run();
+    await salesQuotation.run();
+    await salesPricingCondition.run();
+    await productionData.run();
+    await productionOrderConfirmation.run();
+    await routing.run();
+    await inspectionData.run();
+    await physicalInventory.run();
+    await activityType.run();
+    await attachment.run();
+    await iamUserRole.run();
     console.log('');
 
     // ── Integration Tests ──

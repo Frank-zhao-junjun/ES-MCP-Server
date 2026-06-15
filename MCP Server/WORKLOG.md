@@ -4,6 +4,32 @@
 
 ---
 
+### 2026-06-15 — v0.5: 补齐全部 29 个 US-API 模块（目标 D）
+
+- **User Story**: US-API-007/008/009/012/014/016/017/019/020/025/027/028/029
+- **类型**: Feature — PRD v0.5 路线图目标 D
+- **变更**:
+  - `services/purchase-rfq.js` (**新建**) — US-API-007 采购询价查询
+  - `services/supplier-evaluation.js` (**新建**) — US-API-008 供应商评估查询
+  - `services/service-entry-sheet.js` (**新建**) — US-API-009 服务确认单查询
+  - `services/sales-quotation.js` (**新建**) — US-API-012 销售报价/询价查询
+  - `services/sales-pricing-condition.js` (**新建**) — US-API-014 销售价格条件查询
+  - `services/production-data.js` (**新建**) — US-API-016 生产数据查询（计划订单/工作中心/MRP）
+  - `services/production-order-confirmation.js` (**新建**) — US-API-017 生产订单确认查询
+  - `services/routing.js` (**新建**) — US-API-019 工艺路线查询
+  - `services/inspection-data.js` (**新建**) — US-API-020 质检数据查询
+  - `services/physical-inventory.js` (**新建**) — US-API-025 盘点数据查询
+  - `services/activity-type.js` (**新建**) — US-API-027 作业类型查询
+  - `services/attachment.js` (**新建**) — US-API-028 附件管理查询
+  - `services/iam-user-role.js` (**新建**) — US-API-029 用户与角色查询
+  - `mcp-server.js` — 注册 13 个新工具，工具总数 21→34
+  - `tests/unit/*.test.js` — 新增 13 个单元测试文件
+  - `tests/run-tests.js` — 注册 13 个新测试模块
+  - `README.md` — 工具列表追加 13 个新工具
+- **验证**: `npm test` ✅ 全绿（39 模块，164ms）
+
+---
+
 ### 2026-06-15 — v0.4: Multi-Key + Cache + Auto-Pagination + Prometheus
 
 - **User Story**: US-001, US-008, US-016, US-017（多键覆盖）, 新增 US-011~US-015（v0.4 P1 补齐）

@@ -41,6 +41,19 @@ const { getPurchaseRequisition } = require('./services/purchase-requisition');
 const { getScheduleAgreement } = require('./services/schedule-agreement');
 const { getSalesContract } = require('./services/sales-contract');
 const { getMaterialReservation } = require('./services/material-reservation');
+const { getPurchaseRfq } = require('./services/purchase-rfq');
+const { getSupplierEvaluation } = require('./services/supplier-evaluation');
+const { getServiceEntrySheet } = require('./services/service-entry-sheet');
+const { getSalesQuotation } = require('./services/sales-quotation');
+const { getSalesPricingCondition } = require('./services/sales-pricing-condition');
+const { getProductionData } = require('./services/production-data');
+const { getProductionOrderConfirmation } = require('./services/production-order-confirmation');
+const { getRouting } = require('./services/routing');
+const { getInspectionData } = require('./services/inspection-data');
+const { getPhysicalInventory } = require('./services/physical-inventory');
+const { getActivityType } = require('./services/activity-type');
+const { getAttachment } = require('./services/attachment');
+const { getIamUserRole } = require('./services/iam-user-role');
 
 // Plugin system
 const DynamicLoader = require('./lib/dynamic-loader');
@@ -1047,6 +1060,506 @@ Parameters:
             return textJson(toolSuccess('get_material_reservation', data, warnings));
         } catch (err) {
             return textJson(toolFailure('get_material_reservation', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_purchase_rfq (US-API-007)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_purchase_rfq',
+    `Query SAP Purchase RFQ (Request for Quotation) documents. Returns RFQ details including purchasing organization, supplier, and optionally line items.
+
+Parameters:
+- purchaseRequisition: RFQ number(s), single or comma-separated.
+- purchasingOrganization: Purchasing organization code.
+- purchasingGroup: Purchasing group code.
+- supplier: Supplier BP number.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        purchaseRequisition: z.string().optional().describe('RFQ number(s), e.g. "1000001"'),
+        purchasingOrganization: z.string().optional().describe('Purchasing organization code'),
+        purchasingGroup: z.string().optional().describe('Purchasing group code'),
+        supplier: z.string().optional().describe('Supplier BP number'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_purchase_rfq', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_purchase_rfq');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getPurchaseRfq(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No RFQ documents found'] : [];
+            return textJson(toolSuccess('get_purchase_rfq', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_purchase_rfq', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_supplier_evaluation (US-API-008)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_supplier_evaluation',
+    `Query SAP Supplier Evaluation Scorecards. Returns evaluation scores, criteria, and optionally scorecard items.
+
+Parameters:
+- supplier: Supplier BP number(s), single or comma-separated.
+- purchasingOrganization: Purchasing organization code.
+- evaluationPeriod: Evaluation period identifier.
+- includeItems: Include scorecard items (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        supplier: z.string().optional().describe('Supplier BP number(s)'),
+        purchasingOrganization: z.string().optional().describe('Purchasing organization code'),
+        evaluationPeriod: z.string().optional().describe('Evaluation period identifier'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_supplier_evaluation', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_supplier_evaluation');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getSupplierEvaluation(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No supplier evaluations found'] : [];
+            return textJson(toolSuccess('get_supplier_evaluation', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_supplier_evaluation', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_service_entry_sheet (US-API-009)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_service_entry_sheet',
+    `Query SAP Service Entry Sheets. Returns service entry sheet details including purchase order reference, supplier, and optionally line items.
+
+Parameters:
+- serviceEntrySheet: Service Entry Sheet number(s), single or comma-separated.
+- purchaseOrder: Related Purchase Order number.
+- supplier: Supplier BP number.
+- purchasingOrganization: Purchasing organization code.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        serviceEntrySheet: z.string().optional().describe('Service Entry Sheet number(s)'),
+        purchaseOrder: z.string().optional().describe('Related Purchase Order number'),
+        supplier: z.string().optional().describe('Supplier BP number'),
+        purchasingOrganization: z.string().optional().describe('Purchasing organization code'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_service_entry_sheet', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_service_entry_sheet');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getServiceEntrySheet(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No service entry sheets found'] : [];
+            return textJson(toolSuccess('get_service_entry_sheet', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_service_entry_sheet', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_sales_quotation (US-API-012)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_sales_quotation',
+    `Query SAP Sales Quotation and Sales Inquiry documents. Returns quotation/inquiry details including sold-to party, sales organization, and optionally line items.
+
+Parameters:
+- salesQuotation: Sales Quotation number(s), single or comma-separated.
+- salesInquiry: Sales Inquiry number(s), single or comma-separated.
+- soldToParty: Sold-to party (customer) BP number.
+- salesOrganization: Sales organization code.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        salesQuotation: z.string().optional().describe('Sales Quotation number(s)'),
+        salesInquiry: z.string().optional().describe('Sales Inquiry number(s)'),
+        soldToParty: z.string().optional().describe('Sold-to party (customer) BP number'),
+        salesOrganization: z.string().optional().describe('Sales organization code'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_sales_quotation', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_sales_quotation');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getSalesQuotation(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No sales quotations/inquiries found'] : [];
+            return textJson(toolSuccess('get_sales_quotation', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_sales_quotation', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_sales_pricing_condition (US-API-014)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_sales_pricing_condition',
+    `Query SAP Sales Pricing Condition Records. Returns pricing condition details including condition type, sales organization, and material.
+
+Parameters:
+- conditionTable: Condition table number.
+- conditionType: Condition type(s), e.g. "PR00", "K007".
+- salesOrganization: Sales organization code.
+- distributionChannel: Distribution channel code.
+- material: Material number.
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        conditionTable: z.string().optional().describe('Condition table number'),
+        conditionType: z.string().optional().describe('Condition type(s), e.g. "PR00", "K007"'),
+        salesOrganization: z.string().optional().describe('Sales organization code'),
+        distributionChannel: z.string().optional().describe('Distribution channel code'),
+        material: z.string().optional().describe('Material number'),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_sales_pricing_condition', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_sales_pricing_condition');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getSalesPricingCondition(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No pricing condition records found'] : [];
+            return textJson(toolSuccess('get_sales_pricing_condition', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_sales_pricing_condition', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_production_data (US-API-016)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_production_data',
+    `Query SAP Production Data including Planned Orders, Work Centers, and MRP Requirements. Returns production planning information.
+
+Parameters:
+- material: Material number.
+- plant: Plant code.
+- workCenter: Work center identifier.
+- plannedOrder: Planned order number(s).
+- mrpArea: MRP area.
+- includePlannedOrders: Include planned orders (default true).
+- includeWorkCenters: Include work centers (default true).
+- includeMrp: Include MRP requirements (default true).
+- top: Max records per entity, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        material: z.string().optional().describe('Material number'),
+        plant: z.string().optional().describe('Plant code'),
+        workCenter: z.string().optional().describe('Work center identifier'),
+        plannedOrder: z.string().optional().describe('Planned order number(s)'),
+        mrpArea: z.string().optional().describe('MRP area'),
+        includePlannedOrders: z.boolean().optional().default(true),
+        includeWorkCenters: z.boolean().optional().default(true),
+        includeMrp: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_production_data', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_production_data');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getProductionData(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No production data found'] : [];
+            return textJson(toolSuccess('get_production_data', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_production_data', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_production_order_confirmation (US-API-017)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_production_order_confirmation',
+    `Query SAP Production Order Confirmations. Returns confirmation details including manufacturing order, quantities, and optionally line items.
+
+Note: This endpoint may return 406 if the service is not activated in your SAP system.
+
+Parameters:
+- productionOrder: Production/Manufacturing Order number(s).
+- confirmation: Confirmation number.
+- manufacturingOrder: Manufacturing Order number.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        productionOrder: z.string().optional().describe('Production Order number(s)'),
+        confirmation: z.string().optional().describe('Confirmation number'),
+        manufacturingOrder: z.string().optional().describe('Manufacturing Order number'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_production_order_confirmation', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_production_order_confirmation');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getProductionOrderConfirmation(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No production order confirmations found'] : [];
+            return textJson(toolSuccess('get_production_order_confirmation', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_production_order_confirmation', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_routing (US-API-019)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_routing',
+    `Query SAP Routing (工艺路线) data. Returns routing header and optionally operation details.
+
+Parameters:
+- routing: Routing number(s), single or comma-separated.
+- material: Material number.
+- plant: Plant code.
+- routingGroup: Routing group.
+- includeOperations: Include routing operations (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        routing: z.string().optional().describe('Routing number(s)'),
+        material: z.string().optional().describe('Material number'),
+        plant: z.string().optional().describe('Plant code'),
+        routingGroup: z.string().optional().describe('Routing group'),
+        includeOperations: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_routing', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_routing');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getRouting(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No routings found'] : [];
+            return textJson(toolSuccess('get_routing', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_routing', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_inspection_data (US-API-020)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_inspection_data',
+    `Query SAP Inspection Data including Inspection Methods, Characteristics, and Plans. Returns quality inspection information.
+
+Parameters:
+- inspectionMethod: Inspection method number(s).
+- inspectionCharacteristic: Inspection characteristic identifier.
+- inspectionPlan: Inspection plan number.
+- material: Material number.
+- plant: Plant code.
+- includeMethods: Include inspection methods (default true).
+- includeCharacteristics: Include inspection characteristics (default true).
+- includePlans: Include inspection plans (default true).
+- top: Max records per entity, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        inspectionMethod: z.string().optional().describe('Inspection method number(s)'),
+        inspectionCharacteristic: z.string().optional().describe('Inspection characteristic identifier'),
+        inspectionPlan: z.string().optional().describe('Inspection plan number'),
+        material: z.string().optional().describe('Material number'),
+        plant: z.string().optional().describe('Plant code'),
+        includeMethods: z.boolean().optional().default(true),
+        includeCharacteristics: z.boolean().optional().default(true),
+        includePlans: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_inspection_data', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_inspection_data');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getInspectionData(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No inspection data found'] : [];
+            return textJson(toolSuccess('get_inspection_data', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_inspection_data', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_physical_inventory (US-API-025)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_physical_inventory',
+    `Query SAP Physical Inventory Documents. Returns inventory document details including material, plant, fiscal year, and optionally line items.
+
+Parameters:
+- physicalInventoryDocument: Physical Inventory Document number(s).
+- material: Material number.
+- plant: Plant code.
+- fiscalYear: Fiscal year, e.g. "2025".
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        physicalInventoryDocument: z.string().optional().describe('Physical Inventory Document number(s)'),
+        material: z.string().optional().describe('Material number'),
+        plant: z.string().optional().describe('Plant code'),
+        fiscalYear: z.string().optional().describe('Fiscal year, e.g. "2025"'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_physical_inventory', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_physical_inventory');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getPhysicalInventory(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No physical inventory documents found'] : [];
+            return textJson(toolSuccess('get_physical_inventory', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_physical_inventory', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_activity_type (US-API-027)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_activity_type',
+    `Query SAP Activity Type master data. Returns activity type details including controlling area, cost center, and descriptions.
+
+Parameters:
+- activityType: Activity type code(s), single or comma-separated.
+- controllingArea: Controlling area (e.g. "A000").
+- costCenter: Cost center number.
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        activityType: z.string().optional().describe('Activity type code(s)'),
+        controllingArea: z.string().optional().describe('Controlling area, e.g. "A000"'),
+        costCenter: z.string().optional().describe('Cost center number'),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_activity_type', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_activity_type');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getActivityType(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No activity types found'] : [];
+            return textJson(toolSuccess('get_activity_type', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_activity_type', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_attachment (US-API-028)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_attachment',
+    `Query SAP Attachments linked to business objects. Returns attachment metadata including file name, type, and size.
+
+Parameters:
+- businessObjectType: Business object type (e.g. "BUS2012" for Purchase Order, "BUS2032" for Sales Order).
+- businessObjectKey: Business object key(s), single or comma-separated.
+- documentType: Document type filter.
+- top: Max records, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        businessObjectType: z.string().optional().describe('Business object type, e.g. "BUS2012"'),
+        businessObjectKey: z.string().optional().describe('Business object key(s)'),
+        documentType: z.string().optional().describe('Document type filter'),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_attachment', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_attachment');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getAttachment(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No attachments found'] : [];
+            return textJson(toolSuccess('get_attachment', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_attachment', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_iam_user_role (US-API-029)
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_iam_user_role',
+    `Query SAP IAM Users and Roles. Returns business user details, business roles, and PFCG roles.
+
+Parameters:
+- userId: SAP User ID(s), single or comma-separated.
+- businessRole: Business Role name(s).
+- pfcgRole: PFCG Role name(s).
+- personId: Person ID.
+- includeUsers: Include business users (default true).
+- includeBusinessRoles: Include business roles (default true).
+- includePfcgRoles: Include PFCG roles (default true).
+- top: Max records per entity, default 20, max 100.
+- skip: Records to skip for pagination.`,
+    {
+        userId: z.string().optional().describe('SAP User ID(s)'),
+        businessRole: z.string().optional().describe('Business Role name(s)'),
+        pfcgRole: z.string().optional().describe('PFCG Role name(s)'),
+        personId: z.string().optional().describe('Person ID'),
+        includeUsers: z.boolean().optional().default(true),
+        includeBusinessRoles: z.boolean().optional().default(true),
+        includePfcgRoles: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_iam_user_role', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_iam_user_role');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getIamUserRole(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No users/roles found'] : [];
+            return textJson(toolSuccess('get_iam_user_role', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_iam_user_role', normalizeError(err, ErrorCodes.QUERY_FAILED)));
         }
     })
 );
