@@ -1,6 +1,6 @@
 {
   "name": "sap-s4-mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "SAP S/4HANA MCP Server for AI agents",
   "main": "mcp-server.js",

@@ -114,10 +114,11 @@ class MetricsServer {
     }
 
     async start() {
-        if (this.port <= 0) return;
         return new Promise((resolve, reject) => {
-            this.server = this.app.listen(this.port, () => {
-                console.error(`[sap-s4-mcp] Metrics server listening on port ${this.port}`);
+            this.server = this.app.listen(this.port || 0, () => {
+                const addr = this.server.address();
+                const actualPort = addr ? addr.port : this.port;
+                console.error(`[sap-s4-mcp] Metrics server listening on port ${actualPort}`);
                 resolve();
             });
             this.server.on('error', reject);

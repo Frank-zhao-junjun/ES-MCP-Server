@@ -4,6 +4,43 @@
 
 ---
 
+### 2026-06-15 — v0.4: Multi-Key + Cache + Auto-Pagination + Prometheus
+
+- **User Story**: US-001, US-008, US-016, US-017（多键覆盖）, 新增 US-011~US-015（v0.4 P1 补齐）
+- **类型**: Feature — PRD v0.4 路线图四功能
+- **变更**:
+  - `mcp-auth.js` — 重写：多键模式 `MCP_API_KEYS` JSON，per-key role+lockout，`getAuthenticatedRole()`，向后兼容单键
+  - `lib/roles.js` — `canUseDebugTools(roleOverride)` / `canUseAdminTools(roleOverride)` context-aware
+  - `lib/sap-cache.js` (**新建**) — `SapCache` 类，TTL 缓存，URL 规范化，401/403 整体失效
+  - `lib/auto-pagination.js` (**新建**) — `autoPaginate()`，`@odata.nextLink` 优先 + `$skip` 回退，硬上限 5000
+  - `lib/metrics-server.js` (**新建**) — Express `/metrics` + `/healthz`，Prometheus text format，复用 `express`
+  - `mcp-sap-core.js` — 集成 cache（速率限制器前检查），导出 `sapResponseCache`、`extractNextLink`
+  - `lib/observability.js` — `MetricsStore` 新增 `cacheHits/Misses`、`sapCallDurations`、`getRequestDurations()`、`getSapCallDurations()`
+  - `mcp-server.js` — v0.4.0，`sapDependencies()` 支持 autoPage opt-out，metrics server 启停，health_check 暴露 cache stats，`requireAdminTool` 按 key role 鉴权
+  - `services/sales-order-status.js` — `fetchAllPages()` + `getAllItems` 手动分页
+  - `services/sales-order-trace.js` — `fetchAllPages()` + `getAllPages` 手动分页
+  - `tests/unit/services.test.js` — MAX_TOP 50→100 断言更新
+- **新增配置**: `MCP_API_KEYS`, `SAP_CACHE_TTL_MS`, `MCP_AUTO_PAGE_MAX`, `MCP_METRICS_PORT`
+- **验证**: `node --check` 全文件通过，`npm test` 待手动确认
+
+### 2026-06-15 — v0.4 收尾：HTTP Transport 重构 + Metrics 修复 + 测试扩展 + 清理
+
+- **User Story**: US-006（监控端点增强）, US-010（HTTP 传输加固）
+- **类型**: Refactor + Test
+- **变更**:
+  - `mcp-server.js` — HTTP transport 重构：移除旧 `setupHttpTransport()` 函数，main() 内联标准 `StreamableHTTPServerTransport`，POST `/mcp` + GET `/mcp`(SSE) 分离路由，`server.connect(httpTransport)` 正确绑定
+  - `lib/metrics-server.js` — 端口 0 动态分配支持，`actualPort` 日志输出实际监听端口
+  - `lib/observability.js` — `getMetrics()` 新增 `cache.hits/misses/hitRate` 缓存指标
+  - `tests/unit/observability.test.js` — 新增 `testCacheHitMiss` + `testGetDurations`
+  - `tests/unit/auto-pagination.test.js` (**新建**) — auto-pagination 单元测试
+  - `tests/unit/mcp-auth-v2.test.js` (**新建**) — 多键认证 v2 单元测试
+  - `tests/unit/metrics-server.test.js` (**新建**) — Prometheus metrics server 单元测试
+  - `tests/unit/sap-cache.test.js` (**新建**) — SAP 缓存单元测试
+  - `tests/run-tests.js` — 集成上述 4 个新测试模块
+  - `package.json` — 版本 0.3.0 → 0.4.0
+  - `_upgrade-v04.js` — 删除（一次性升级脚本，已完成使命）
+- **验证**: `node --check` 全文件通过，测试模块已集成到 runner
+
 ### 2026-06-15 — 核心重构：认证增强 + 角色扩展 + 销售订单增强 + 服务端改进
 
 - **User Story**: US-001, US-002, US-003, US-008
@@ -299,7 +336,7 @@
 | Constitution §6.1 三层流程 | PRD → US → Spec 在宪法中正确定义 |
 | AGENT_USAGE.md 错误码 | 11 个错误码全部与 `lib/errors.js` 一致 |
 | 测试覆盖率文档 | Constitution §5.1 三层测试与实际 tests/ 目录一致 |
-| WORKLOG 完整性 | 10 条记录，最早基线到最新 Spec 补齐 |
+| WORKLOG 完整性 | 15 条记录，最早基线到 v0.4 HTTP 重构/测试扩展 |
 | git 敏感文件 | `git ls-files` 零敏感文件 ✅ |
 
 - **验证**: 交叉引用矩阵完整，Constitution §6.1 三层流程与实际一致，AGENT_USAGE 与代码实现匹配。
@@ -313,7 +350,7 @@
 | User Stories 完成（MCP 工具） | 17 |
 | User Stories 登记（SAP API 资产） | 29 (US-API-001 ~ US-API-029) |
 | 工具数量 | 19 |
-| 测试通过 | 40 contract + 全量 unit/integration |
+| 测试通过 | 40 contract + 全量 unit/integration（含 4 个 v0.4 新模块） |
 | 安全改造 | P0 (5 项) + 脱敏 (4 项) |
 | 工程化 | P1 (3 项) + P2 (4 项) |
 | 文档 | PRD + User Stories + Constitution + README + AGENT_USAGE + SAP API 清单 |

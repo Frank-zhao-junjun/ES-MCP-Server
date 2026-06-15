@@ -128,6 +128,29 @@ function testMetricsStoreReset() {
     assert.strictEqual(m.sapCalls.total, 0);
 }
 
+// ── v0.4 Cache Metrics ──
+
+function testCacheHitMiss() {
+    const store = new MetricsStore();
+    store.recordCacheHit();
+    store.recordCacheHit();
+    store.recordCacheMiss();
+    const m = store.getMetrics();
+    assert.equal(m.cache.hits, 2);
+    assert.equal(m.cache.misses, 1);
+    assert.equal(m.cache.hitRate, 67);
+}
+
+function testGetDurations() {
+    const store = new MetricsStore();
+    store.recordRequest('toolA', 100, true);
+    store.recordRequest('toolA', 200, true);
+    store.recordSapCall(50, true);
+    store.recordSapCall(150, true);
+    assert.equal(store.getRequestDurations().length, 2);
+    assert.equal(store.getSapCallDurations().length, 2);
+}
+
 // ════════════════════════════════════════════════════
 // Runner
 // ════════════════════════════════════════════════════
@@ -143,6 +166,8 @@ function run() {
     testMetricsStorePercentiles();
     testMetricsStoreSapCalls();
     testMetricsStoreReset();
+    testCacheHitMiss();
+    testGetDurations();
     console.log('  ✅ observability.test.js — all passed');
 }
 

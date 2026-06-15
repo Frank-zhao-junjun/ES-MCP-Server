@@ -893,121 +893,6 @@ Parameters:
     })
 );
 
-// ── HTTP Transport Setup ──────────────────────────────────────────────
-
-function setupHttpTransport() {
-    if (!ENABLE_HTTP_TRANSPORT) {
-        return null;
-    }
-
-    expressApp = express();
-    
-    // Middleware
-    expressApp.use(cors());
-    expressApp.use(express.json({ limit: '10mb' }));
-    expressApp.use(express.urlencoded({ extended: true }));
-
-    // Root endpoint
-    expressApp.get('/', (req, res) => {
-        res.json({
-            name: 'SAP S/4HANA MCP Server',
-            version: '0.4.0',
-            status: 'running',
-            authenticated: isAuthenticated(runtimeContext.auth),
-            timestamp: new Date().toISOString(),
-            features: {
-                httpTransport: true,
-                sseSupported: true,
-                multiApiKey: Boolean(runtimeContext.auth.apiKeys),
-                debugToolsEnabled: isDebugToolEnabled(),
-                adminToolsEnabled: isAdminToolEnabled(),
-            }
-        });
-    });
-
-    // Health check endpoint
-    expressApp.get('/health', (req, res) => {
-        res.json({
-            status: 'healthy',
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
-            authenticated: isAuthenticated(runtimeContext.auth)
-        });
-    });
-
-    // MCP protocol endpoint (Streamable HTTP)
-    // The SDK's StreamableHTTPServerTransport handles both POST (requests) and GET (SSE streams)
-    // We need to mount it at a specific path, e.g., /mcp
-    expressApp.all('/mcp', async (req, res) => {
-        try {
-            // Create a new transport for each request/session if stateless, 
-            // or manage sessions if stateful. For simplicity in this integration, 
-            // we'll create a transport per request context or use a shared one if appropriate.
-            // However, the standard pattern for StreamableHTTP is often one transport per connection/session.
-            // Given the existing stdio pattern, we'll instantiate a transport here.
-            
-            // Note: In a production robust app, you might want to manage sessions more carefully.
-            // For now, we create a transport that handles the request.
-            
-            const transport = new StreamableHTTPServerTransport({
-                sessionIdGenerator: undefined, // Stateless mode
-            });
-
-            // Connect the server to this transport
-            // We must ensure server.connect is called only once or handled correctly.
-            // Actually, McpServer usually connects to ONE transport. 
-            // To support multiple concurrent HTTP requests alongside Stdio, we might need a different approach 
-            // or accept that Stdio and HTTP might conflict if not managed by a multiplexer.
-            
-            // Correction: The MCP SDK Server typically binds to one transport. 
-            // To support both Stdio and HTTP, we usually choose one at startup or use a wrapper.
-            // However, the request asks to ADD support. 
-            // If we connect to HTTP transport here, it might disconnect Stdio.
-            
-            // Let's assume the user will run EITHER stdio OR http based on env var, 
-            // OR we need to handle the fact that `server.connect` replaces the previous transport.
-            
-            // To truly support both simultaneously with the current SDK structure is complex.
-            // Often, HTTP/SSE is used as an alternative to Stdio.
-            
-            // Let's implement it such that if HTTP is enabled, we use it. 
-            // If not, we fall back to Stdio. Or we allow switching.
-            
-            // For this specific refactor, let's make HTTP the primary if enabled, 
-            // but keep Stdio available if HTTP is not enabled.
-            
-            await server.connect(transport);
-            
-            // Handle the request
-            await transport.handleRequest(req, res, req.body);
-            
-        } catch (err) {
-            console.error('MCP HTTP handling error:', err);
-            if (!res.headersSent) {
-                res.status(500).json({
-                    error: err.message,
-                    code: 'INTERNAL_ERROR'
-                });
-            }
-        }
-    });
-
-    // Start HTTP server
-    httpServer = require('http').createServer(expressApp);
-    
-    httpServer.on('listening', () => {
-        console.error(`\n🌐 HTTP Transport 已启动: http://${BIND_ADDRESS}:${PORT}`);
-        console.error(`📋 MCP 协议端点: http://${BIND_ADDRESS}:${PORT}/mcp`);
-        console.error(`🏥 健康检查: http://${BIND_ADDRESS}:${PORT}/health`);
-    });
-
-    httpServer.listen(PORT, BIND_ADDRESS, () => {
-        console.error(`[sap-s4-mcp] HTTP/SSE Transport listening on port ${PORT}`);
-    });
-
-    return httpServer;
-}
-
 async function gracefulShutdown(transport, metricsServer = null) {
     isShuttingDown = true;
     console.error('[sap-s4-mcp] Shutting down gracefully...');
@@ -1144,14 +1029,50 @@ async function main() {
 
     let transport = null;
 
-    // Setup HTTP transport if enabled
     if (ENABLE_HTTP_TRANSPORT) {
-        setupHttpTransport();
-        // Note: When using HTTP, the transport is created per-request in the handler above,
-        // or we might need a persistent one. The current implementation in setupHttpTransport
-        // creates a new transport for each request in the /mcp handler.
-        // We don't pass a single 'transport' instance to gracefulShutdown for HTTP in the same way.
-        // But we still need to initialize plugins etc.
+        // Setup HTTP/SSE Transport
+        expressApp = express();
+        expressApp.use(cors());
+        expressApp.use(express.json({ limit: '10mb' }));
+        expressApp.use(express.urlencoded({ extended: true }));
+
+        // Optional: Add simple health/info endpoints
+        expressApp.get('/', (req, res) => {
+            res.json({
+                name: 'SAP S/4HANA MCP Server',
+                version: '0.4.0',
+                status: 'running',
+                timestamp: new Date().toISOString(),
+            });
+        });
+
+        const httpTransport = new StreamableHTTPServerTransport({
+            sessionIdGenerator: undefined, // Stateless mode
+        });
+
+        // Mount MCP handler
+        expressApp.post('/mcp', (req, res) => {
+            httpTransport.handlePostMessage(req, res, req.body);
+        });
+
+        expressApp.get('/mcp', (req, res) => {
+            httpTransport.handleGetMessage(req, res);
+        });
+
+        // Create HTTP server
+        httpServer = require('http').createServer(expressApp);
+        
+        await new Promise((resolve) => {
+            httpServer.listen(PORT, BIND_ADDRESS, () => {
+                console.error(`\n🌐 HTTP Transport 已启动: http://${BIND_ADDRESS}:${PORT}`);
+                console.error(`📋 MCP 协议端点: http://${BIND_ADDRESS}:${PORT}/mcp`);
+                resolve();
+            });
+        });
+
+        // Connect MCP Server to HTTP Transport
+        await server.connect(httpTransport);
+        transport = httpTransport; // Keep reference for shutdown if needed, though HTTP server handles lifecycle
         
         console.error('[sap-s4-mcp v0.4] MCP Server started with HTTP transport');
     } else {

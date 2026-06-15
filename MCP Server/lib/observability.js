@@ -155,6 +155,13 @@ class MetricsStore {
                     },
                 ])
             ),
+            cache: {
+                hits: this.cacheHits,
+                misses: this.cacheMisses,
+                hitRate: (this.cacheHits + this.cacheMisses) > 0
+                    ? Math.round((this.cacheHits / (this.cacheHits + this.cacheMisses)) * 100)
+                    : 0,
+            },
         };
     }
 }
