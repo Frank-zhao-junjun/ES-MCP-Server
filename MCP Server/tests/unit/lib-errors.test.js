@@ -68,6 +68,7 @@ function testNormalizeErrorEdgeCases() {
 // ── REQ-001-06: ErrorCodes 完整性 ──
 function testErrorCodesComplete() {
     const required = [
+        'ADMIN_TOOL_DISABLED',
         'AUTH_REQUIRED', 'AUTH_INVALID_KEY', 'AUTH_LOCKED', 'AUTH_MISSING',
         'DEBUG_TOOL_DISABLED', 'INTERNAL', 'INVALID_INPUT',
         'NO_ENDPOINT', 'QUERY_FAILED', 'SAP_NETWORK_ERROR', 'SAP_TIMEOUT',

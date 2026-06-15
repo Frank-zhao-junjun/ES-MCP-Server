@@ -1,20 +1,33 @@
 # SAP S/4HANA MCP Server
 
-MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-oriented tools.
+MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-oriented, read-only tools.
 
-## Current MVP
+For Agent-side calling rules, tool selection, response handling, and safety boundaries, see [AGENT_USAGE.md](./AGENT_USAGE.md).
+
+## Current Tools
+
+Business tools:
 
 - `authenticate`: authenticate the Agent with `MCP_API_KEY`.
+- `health_check`: check server configuration, auth status, SAP reachability, scenario files, and runtime metrics.
 - `get_sales_order_status`: get Sales Order header and items.
 - `trace_sales_order`: trace Sales Order lifecycle across production, delivery, material document, and billing APIs.
+- `get_business_partner`: query SAP Business Partner master data.
+- `get_product`: query SAP Product master data.
+- `get_purchase_order`: query SAP Purchase Order header and items.
+- `get_material_stock`: query SAP Material Stock data.
+- `get_bom`: query SAP Bill of Materials data.
+- `get_supplier_invoice`: query SAP Supplier Invoice data.
+- `get_cost_center`: query SAP Cost Center master data.
+- `get_entity_schema`: inspect SAP OData entity fields from service metadata.
 - `list_sap_scenarios`: list configured SAP Communication Scenarios.
-- `query_sap_scenario`: debug/admin generic query tool. Disabled unless `MCP_ENABLE_DEBUG_TOOLS=true`.
 
-## New Enhancement Features
+Admin/debug tools:
 
-- `load_plugin`: dynamically load new tools from plugin files.
-- `unload_plugin`: unload plugins and their tools at runtime.
-- `list_loaded_plugins`: list all currently loaded plugins and their tools.
+- `query_sap_scenario`: generic SAP scenario query tool. Disabled unless `MCP_ENABLE_DEBUG_TOOLS=true`.
+- `load_plugin`: dynamically load new tools from plugin files. Disabled unless `MCP_ENABLE_ADMIN_TOOLS=true`.
+- `unload_plugin`: unload plugins and their tools at runtime. Disabled unless `MCP_ENABLE_ADMIN_TOOLS=true`.
+- `list_loaded_plugins`: list all currently loaded plugins and their tools. Disabled unless `MCP_ENABLE_ADMIN_TOOLS=true`.
 
 ## Install
 
@@ -24,7 +37,7 @@ npm install
 npm test
 ```
 
-## Configuration
+## Run
 
 The server runs over MCP stdio:
 
@@ -32,17 +45,21 @@ The server runs over MCP stdio:
 npm start
 ```
 
+## Configuration
+
 Required environment variables:
 
 | Name | Required | Description |
 | --- | --- | --- |
-| `MCP_API_KEY` | Yes | Pre-shared MCP authentication key. If missing, a temporary key is printed to stderr. |
+| `MCP_API_KEY` | Yes in production | Pre-shared MCP authentication key. In production it must be explicitly configured. In local development, a temporary key may be generated when missing. |
+| `MCP_REQUIRE_API_KEY` | No | Set to `true` to reject startup when `MCP_API_KEY` is missing. This is always enforced when `NODE_ENV=production`. |
 | `SAP_CREDENTIALS_FILE` | Yes | Path to the SAP communication user credential file. |
 | `SAP_SCENARIO_DIR` | Yes | Directory containing `SAP_COM_xxxx` endpoint text files. |
 | `SAP_BASE_URL` | No | SAP API base URL. Defaults to the current S/4HANA tenant URL. |
 | `SAP_CLIENT` | No | SAP client. Defaults to `100`. |
 | `SAP_REQUEST_TIMEOUT_MS` | No | SAP request timeout. Defaults to `30000`. |
 | `MCP_ENABLE_DEBUG_TOOLS` | No | Set to `true` to enable `query_sap_scenario`. Defaults to disabled. |
+| `MCP_ENABLE_ADMIN_TOOLS` | No | Set to `true` to enable plugin management tools: `load_plugin`, `unload_plugin`, `list_loaded_plugins`. Defaults to disabled. |
 
 Example `mcp.json`:
 
@@ -59,12 +76,16 @@ Example `mcp.json`:
         "SAP_SCENARIO_DIR": "E:\\00 - 中数通ES环境\\ES 接口",
         "SAP_BASE_URL": "https://your-tenant-api.s4hana.sapcloud.cn",
         "SAP_CLIENT": "100",
-        "MCP_ENABLE_DEBUG_TOOLS": "false"
+        "MCP_REQUIRE_API_KEY": "true",
+        "MCP_ENABLE_DEBUG_TOOLS": "false",
+        "MCP_ENABLE_ADMIN_TOOLS": "false"
       }
     }
   }
 }
 ```
+
+The checked-in `mcp.json` is a local template. Replace `MCP_API_KEY` and `SAP_BASE_URL` before using it with a real MCP client. Production deployments should set `MCP_REQUIRE_API_KEY=true` or `NODE_ENV=production`.
 
 ## SAP Credential File
 
@@ -72,10 +93,10 @@ The current MVP supports the existing local credential text format and reads:
 
 - `User Name:<value>`
 - `User ID:<value>`
-- `密码：<value>`
-- `或者这个：<value>`
+- `密码:<value>` or `密码：<value>`
+- `或者这个:<value>` or `或者这个：<value>`
 
-Production use should move credentials to a managed secret store or environment-injected secret file.
+Production use should move credentials to a managed secret store or an environment-injected secret file.
 
 ## Response Schema
 
@@ -112,10 +133,12 @@ Error responses keep the same top-level schema:
 ## Recommended Agent Flow
 
 1. Call `authenticate` with `api_key`.
-2. Use `get_sales_order_status` for direct Sales Order checks.
-3. Use `trace_sales_order` only when downstream lifecycle data is needed.
-4. Use `query_sap_scenario` only for debug/admin exploration and only when explicitly enabled.
-5. Use `load_plugin` to dynamically add new tools at runtime (optional).
+2. Call `health_check` if the Agent needs to verify configuration or SAP connectivity.
+3. Use business tools such as `get_sales_order_status`, `get_purchase_order`, `get_product`, or `get_material_stock` for normal read-only queries.
+4. Use `trace_sales_order` only when downstream lifecycle data is needed.
+5. Use `get_entity_schema` before building complex filters against unfamiliar OData entities.
+6. Use `query_sap_scenario` only for debug/admin exploration and only when explicitly enabled.
+7. Treat `load_plugin`, `unload_plugin`, and `list_loaded_plugins` as admin-only operations. They are blocked unless `MCP_ENABLE_ADMIN_TOOLS=true`.
 
 ## Architecture
 
@@ -138,20 +161,24 @@ Error responses keep the same top-level schema:
 ```powershell
 npm test
 node --check mcp-server.js
+node -e "JSON.parse(require('fs').readFileSync('mcp.json','utf8')); console.log('mcp.json ok')"
 ```
 
 `npm test` does not call SAP. It validates response schema, context isolation, scenario key generation, and business service URL generation with fake SAP clients.
 
 ## Plugin System
 
-The server now supports a plugin system that allows:
+The server supports a plugin system for controlled extension:
 
-- Dynamic loading of new tools at runtime
-- Plugin-based architecture for extensibility
-- Hot reloading of plugin code
-- Runtime management of plugins
+- Dynamic loading of new tools at runtime.
+- Plugin-based architecture for extensibility.
+- Hot reloading of plugin code.
+- Runtime management of plugins.
+
+Plugin tools are admin-only capabilities when this MCP Server is exposed to other Agents. Runtime plugin management is blocked unless `MCP_ENABLE_ADMIN_TOOLS=true`.
 
 For more information about the plugin system, see:
-- `docs/plugin-system-guide.md` - Complete guide to using the plugin system
-- `examples/sample-plugin.js` - Example plugin implementation
-- `docs/enhancements-overview.md` - Overview of all enhancements made
+
+- `docs/plugin-system-guide.md`: complete guide to using the plugin system.
+- `examples/sample-plugin.js`: example plugin implementation.
+- `docs/enhancements-overview.md`: overview of all enhancements made.

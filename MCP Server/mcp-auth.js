@@ -4,6 +4,10 @@ const { ErrorCodes } = require('./lib/errors');
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 30000;
 
+function isApiKeyRequired() {
+    return process.env.MCP_REQUIRE_API_KEY === 'true' || process.env.NODE_ENV === 'production';
+}
+
 function createAuthContext() {
     return {
         apiKey: null,
@@ -19,6 +23,12 @@ function initAuth(context = defaultAuthContext) {
     context.apiKey = process.env.MCP_API_KEY || '';
 
     if (!context.apiKey) {
+        if (isApiKeyRequired()) {
+            const err = new Error('MCP_API_KEY is required when MCP_REQUIRE_API_KEY=true or NODE_ENV=production.');
+            err.code = ErrorCodes.AUTH_MISSING;
+            throw err;
+        }
+
         context.apiKey = 'mcp-' + crypto.randomBytes(24).toString('base64url');
         console.error('[sap-s4-mcp] MCP_API_KEY is not configured; generated a temporary key:');
         console.error(`[sap-s4-mcp] ${context.apiKey}`);
@@ -94,6 +104,7 @@ function generateNewKey(context = defaultAuthContext) {
 
 module.exports = {
     createAuthContext,
+    isApiKeyRequired,
     initAuth,
     authenticate,
     isAuthenticated,

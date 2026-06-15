@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { ErrorCodes, makeError, errorCodeFromSapStatus } = require('./lib/errors');
+const { sapRateLimiter } = require('./lib/rate-limiter');
 
-const SAP_BASE_URL = process.env.SAP_BASE_URL || 'https://my200967-api.s4hana.sapcloud.cn';
+const SAP_BASE_URL = process.env.SAP_BASE_URL || 'https://your-tenant-api.s4hana.sapcloud.cn';
 const SAP_CLIENT = process.env.SAP_CLIENT || '100';
 const DEFAULT_TOP = 20;
 const MAX_TOP = 100;
@@ -182,27 +183,32 @@ async function sapFetchOnce(urlPath, context) {
 
 async function sapFetch(urlPath, context = defaultSapContext) {
     checkCircuitBreaker();
+    await sapRateLimiter.acquire();
 
     const MAX_RETRIES = 2;
     let lastErr = null;
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        try {
-            const result = await sapFetchOnce(urlPath, context);
-            resetCircuitBreaker();
-            return result;
-        } catch (err) {
-            lastErr = err;
-            if (!err.retryable || attempt >= MAX_RETRIES) {
-                break;
+    try {
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const result = await sapFetchOnce(urlPath, context);
+                resetCircuitBreaker();
+                return result;
+            } catch (err) {
+                lastErr = err;
+                if (!err.retryable || attempt >= MAX_RETRIES) {
+                    break;
+                }
+                const delay = 1000 * Math.pow(2, attempt);
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
-            const delay = 1000 * Math.pow(2, attempt);
-            await new Promise(resolve => setTimeout(resolve, delay));
         }
-    }
 
-    recordCircuitBreakerFailure(lastErr);
-    throw lastErr;
+        recordCircuitBreakerFailure(lastErr);
+        throw lastErr;
+    } finally {
+        sapRateLimiter.release();
+    }
 }
 
 function isV2(url) {

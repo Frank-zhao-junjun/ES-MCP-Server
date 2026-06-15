@@ -4,7 +4,7 @@
  */
 const assert = require('assert');
 const {
-    createAuthContext, initAuth, authenticate,
+    createAuthContext, isApiKeyRequired, initAuth, authenticate,
     isAuthenticated, requireAuth, generateNewKey,
 } = require('../../mcp-auth');
 const { ErrorCodes } = require('../../lib/errors');
@@ -21,6 +21,35 @@ function withEnv(key, value, fn) {
             process.env[key] = prev;
         } else {
             delete process.env[key];
+        }
+    }
+}
+
+function withEnvVars(values, fn) {
+    const previous = {};
+    for (const key of Object.keys(values)) {
+        previous[key] = {
+            existed: key in process.env,
+            value: process.env[key],
+        };
+    }
+
+    try {
+        for (const [key, value] of Object.entries(values)) {
+            if (value === undefined) {
+                delete process.env[key];
+            } else {
+                process.env[key] = value;
+            }
+        }
+        return fn();
+    } finally {
+        for (const [key, item] of Object.entries(previous)) {
+            if (item.existed) {
+                process.env[key] = item.value;
+            } else {
+                delete process.env[key];
+            }
         }
     }
 }
@@ -74,6 +103,29 @@ function testInitAuthAutoGenerate() {
             delete process.env.MCP_API_KEY;
         }
     }
+}
+
+function testInitAuthRequiresExplicitKeyInProduction() {
+    withEnvVars({ MCP_API_KEY: undefined, MCP_REQUIRE_API_KEY: undefined, NODE_ENV: 'production' }, () => {
+        const ctx = createAuthContext();
+        assert.throws(
+            () => initAuth(ctx),
+            (err) => err.code === ErrorCodes.AUTH_MISSING,
+            'production mode should require MCP_API_KEY'
+        );
+    });
+}
+
+function testInitAuthRequiresExplicitKeyWhenFlagEnabled() {
+    withEnvVars({ MCP_API_KEY: undefined, MCP_REQUIRE_API_KEY: 'true', NODE_ENV: undefined }, () => {
+        const ctx = createAuthContext();
+        assert.strictEqual(isApiKeyRequired(), true);
+        assert.throws(
+            () => initAuth(ctx),
+            (err) => err.code === ErrorCodes.AUTH_MISSING,
+            'MCP_REQUIRE_API_KEY=true should require MCP_API_KEY'
+        );
+    });
 }
 
 // ── REQ-003-04: authenticate 成功 ──
@@ -217,6 +269,8 @@ function run() {
     testCreateAuthContextIsolation();
     testInitAuthWithEnv();
     testInitAuthAutoGenerate();
+    testInitAuthRequiresExplicitKeyInProduction();
+    testInitAuthRequiresExplicitKeyWhenFlagEnabled();
     testAuthenticateSuccess();
     testAuthenticateInvalidKey();
     testAuthenticateLockout();

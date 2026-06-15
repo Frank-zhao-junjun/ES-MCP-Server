@@ -6,7 +6,8 @@
   "main": "mcp-server.js",
   "scripts": {
     "start": "node mcp-server.js",
-    "test": "node tests/run-tests.js"
+    "test": "node tests/run-tests.js",
+    "test:contract": "node tests/contract/mcp-client.test.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

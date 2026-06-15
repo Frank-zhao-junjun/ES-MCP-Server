@@ -7,7 +7,14 @@
       "env": {
         "MCP_API_KEY": "mcp-你的密钥请替换为实际值",
         "SAP_CREDENTIALS_FILE": "e:\\00 - 中数通ES环境\\ES 接口\\user.txt",
-        "SAP_SCENARIO_DIR": "e:\\00 - 中数通ES环境\\ES 接口"
+        "SAP_SCENARIO_DIR": "e:\\00 - 中数通ES环境\\ES 接口",
+        "SAP_BASE_URL": "https://your-tenant-api.s4hana.sapcloud.cn",
+        "MCP_REQUIRE_API_KEY": "true",
+        "MCP_ROLE": "readonly",
+        "MCP_ENABLE_DEBUG_TOOLS": "false",
+        "MCP_ENABLE_ADMIN_TOOLS": "false",
+        "MCP_SAP_MAX_CONCURRENT": "5",
+        "MCP_SAP_RATE_PER_MIN": "60"
       }
     }
   }

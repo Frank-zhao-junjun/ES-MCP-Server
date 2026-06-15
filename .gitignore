@@ -3,3 +3,39 @@ node_modules/
 .env
 .DS_Store
 Thumbs.db
+
+# ── SAP 凭据 — 绝对不能提交 ──
+user.txt
+
+# ── SAP 业务数据 — 不能泄露 ──
+SalesOrder*.txt
+SalesOrder*.xml
+Product_*.json
+_v2_*.txt
+SAP API.txt
+
+# ── 探测定时 / 巡检 / 重测结果 ──
+Endpoint_Probe_*.json
+Endpoint_Status_*.json
+Validation_Retest_*.json
+Scenario_*_Status_*.json
+Foundation_Realtime_API_Candidates.txt
+
+# ── 探索脚本运行时产物 ──
+_check_*.js
+_compare_*.js
+_discover_*.js
+_fetch_*.js
+_final_check*.js
+_mcp_stderr.txt
+_mto_check*.js
+_query_*.js
+_scan_*.js
+_search_*.js
+_v2_*.js
+query_outbound_delivery.js
+
+# ── 编辑器 / 临时文件 ──
+*.xlsx
+*.pptx
+~$*

@@ -1,0 +1,15 @@
+node_modules/
+.git/
+.vscode/
+.claude/
+.specify/
+specs/
+tasks/
+docs/
+examples/
+test-*.js
+*.md
+mcp.json
+.env
+*.log
+_mcp_stderr.txt

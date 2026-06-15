@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const SAP_HOST = 'https://my200967-api.s4hana.sapcloud.cn';
+const SAP_HOST = process.env.SAP_BASE_URL || 'https://your-tenant-api.s4hana.sapcloud.cn';
 const SAP_CLIENT = '100';
 const TOP_N = '20';
 const scenarioDir = __dirname;
@@ -189,7 +189,10 @@ function parseScenarioFiles() {
 
     const urls = (content.match(/https?:\/\/[^\s"'<>]+/g) || [])
       .map(cleanFoundUrl)
-      .filter((u) => u.includes('my200967-api.s4hana.sapcloud.cn'));
+      .filter((u) => {
+        const sapHost = process.env.SAP_BASE_URL ? new URL(process.env.SAP_BASE_URL).host : '';
+        return sapHost ? u.includes(sapHost) : u.includes('s4hana.sapcloud.cn');
+      });
 
     const uniqueUrls = [...new Set(urls)].sort((a, b) => {
       const aIsAttachment = /API_CV_ATTACHMENT_SRV/i.test(a);

@@ -19,7 +19,8 @@ const {
 const { ErrorCodes, makeError, normalizeError } = require('./lib/errors');
 const { toolSuccess, toolFailure, textJson } = require('./lib/mcp-response');
 const { createRuntimeContext } = require('./runtime-context');
-const { generateTraceId, recordSapCall, metrics } = require('./lib/observability');
+const { generateTraceId, createTraceContext, recordSapCall, metrics } = require('./lib/observability');
+const { canUseDebugTools, canUseAdminTools } = require('./lib/roles');
 const { getSalesOrderStatus } = require('./services/sales-order-status');
 const { traceSalesOrder } = require('./services/sales-order-trace');
 const { getCostCenter } = require('./services/cost-center');
@@ -104,9 +105,14 @@ function wrapTool(toolName, handler) {
 }
 
 // ── Debug / Config ──────────────────────────────────
+// Delegates to lib/roles.js: respects MCP_ROLE with MCP_ENABLE_* overrides.
 
 function isDebugToolEnabled() {
-    return process.env.MCP_ENABLE_DEBUG_TOOLS === 'true';
+    return canUseDebugTools();
+}
+
+function isAdminToolEnabled() {
+    return canUseAdminTools();
 }
 
 function sapContextForTrace(traceId) {
@@ -123,6 +129,7 @@ function sapContextForTrace(traceId) {
 
 function sapDependencies(traceId) {
     const context = sapContextForTrace(traceId);
+    const traceCtx = createTraceContext(traceId);
     return {
         sapFetch: async (url) => {
             const start = Date.now();
@@ -131,19 +138,20 @@ function sapDependencies(traceId) {
                 const durationMs = Date.now() - start;
                 metrics.recordSapCall(durationMs, true);
                 if (traceId) {
-                    recordSapCall(null, url, durationMs, 'ok');
+                    recordSapCall(traceCtx, url, durationMs, 'ok');
                 }
                 return result;
             } catch (err) {
                 const durationMs = Date.now() - start;
                 metrics.recordSapCall(durationMs, false);
                 if (traceId) {
-                    recordSapCall(null, url, durationMs, err.code || err.message, err.code);
+                    recordSapCall(traceCtx, url, durationMs, err.code || err.message, err.code);
                 }
                 throw err;
             }
         },
         extractRows,
+        _traceCtx: traceCtx,
     };
 }
 
@@ -157,6 +165,23 @@ function requireAuthenticatedTool(toolName) {
 }
 
 // ── Built-in Tools ──────────────────────────────────
+
+function requireAdminTool(toolName) {
+    const authFailure = requireAuthenticatedTool(toolName);
+    if (authFailure) return authFailure;
+
+    if (!isAdminToolEnabled()) {
+        return textJson(toolFailure(
+            toolName,
+            makeError(
+                ErrorCodes.ADMIN_TOOL_DISABLED,
+                `${toolName} is disabled. Set MCP_ENABLE_ADMIN_TOOLS=true to enable admin plugin management tools.`
+            )
+        ));
+    }
+
+    return null;
+}
 
 server.tool(
     'authenticate',
@@ -197,10 +222,25 @@ Parameters:
         includeScenarios: z.boolean().optional().default(false),
     },
     wrapTool('health_check', async ({ includeSapCheck, includeScenarios }) => {
+        const authenticated = isAuthenticated(runtimeContext.auth);
+
+        // ── 未认证：仅返回最小状态，不泄露配置细节 ──
+        if (!authenticated) {
+            return textJson(toolSuccess('health_check', {
+                server: { ok: true, version: '0.3.0', uptimeSeconds: metrics.getMetrics().uptimeSeconds },
+                auth: { ok: false },
+                debugToolsEnabled: isDebugToolEnabled(),
+                adminToolsEnabled: isAdminToolEnabled(),
+            }, ['Authenticate to view full health details.']));
+        }
+
+        // ── 已认证：返回完整健康信息 ──
         const warnings = [];
         const checks = {
             server: { ok: true, version: '0.3.0', uptimeSeconds: metrics.getMetrics().uptimeSeconds },
-            auth: { ok: isAuthenticated(runtimeContext.auth) },
+            auth: { ok: true },
+            debugToolsEnabled: isDebugToolEnabled(),
+            adminToolsEnabled: isAdminToolEnabled(),
             credentialsFile: { ok: false, path: process.env.SAP_CREDENTIALS_FILE || path.join(__dirname, '..', 'user.txt') },
             scenarioDir: { ok: false, path: process.env.SAP_SCENARIO_DIR || __dirname },
             scenarios: { ok: false, count: 0 },
@@ -237,7 +277,7 @@ Parameters:
         if (includeSapCheck) {
             checks.sapConnectivity.checked = true;
             try {
-                const base = process.env.SAP_BASE_URL || 'https://my200967-api.s4hana.sapcloud.cn';
+                const base = process.env.SAP_BASE_URL || 'https://your-tenant-api.s4hana.sapcloud.cn';
                 const resp = await fetch(`${base}/sap/opu/odata/sap/?$format=json&sap-client=${process.env.SAP_CLIENT || '100'}`, {
                     headers: { Accept: 'application/json' },
                     signal: AbortSignal.timeout(10000),
@@ -626,8 +666,8 @@ Parameters:
         pluginPath: z.string().min(1).describe('Path to the plugin file to load'),
     },
     wrapTool('load_plugin', async ({ pluginPath }) => {
-        const authFailure = requireAuthenticatedTool('load_plugin');
-        if (authFailure) return authFailure;
+        const adminFailure = requireAdminTool('load_plugin');
+        if (adminFailure) return adminFailure;
 
         if (!dynamicLoader) {
             return textJson(toolFailure('load_plugin', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
@@ -663,8 +703,8 @@ Parameters:
         pluginId: z.string().min(1).describe('ID of the plugin to unload'),
     },
     wrapTool('unload_plugin', async ({ pluginId }) => {
-        const authFailure = requireAuthenticatedTool('unload_plugin');
-        if (authFailure) return authFailure;
+        const adminFailure = requireAdminTool('unload_plugin');
+        if (adminFailure) return adminFailure;
 
         if (!dynamicLoader) {
             return textJson(toolFailure('unload_plugin', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
@@ -695,8 +735,8 @@ server.tool(
     `List all currently loaded plugins and their tools.`,
     {},
     wrapTool('list_loaded_plugins', async () => {
-        const authFailure = requireAuthenticatedTool('list_loaded_plugins');
-        if (authFailure) return authFailure;
+        const adminFailure = requireAdminTool('list_loaded_plugins');
+        if (adminFailure) return adminFailure;
 
         if (!dynamicLoader) {
             return textJson(toolFailure('list_loaded_plugins', makeError(ErrorCodes.INTERNAL, 'Plugin system not initialized')));
@@ -824,15 +864,21 @@ function validateStartupConfig() {
         errors.push(`SAP_SCENARIO_DIR not readable: ${scenarioDir} — ${err.message}`);
     }
 
-    // 3. SAP_BASE_URL format
-    const baseUrl = process.env.SAP_BASE_URL || 'https://my200967-api.s4hana.sapcloud.cn';
-    try {
-        const parsed = new URL(baseUrl);
-        if (!/^https?:$/.test(parsed.protocol)) {
-            errors.push(`SAP_BASE_URL must use http or https protocol: ${baseUrl}`);
+    // 3. SAP_BASE_URL — required, must not be the placeholder
+    const baseUrl = process.env.SAP_BASE_URL || '';
+    if (!baseUrl) {
+        errors.push('SAP_BASE_URL is required. Set it to your S/4HANA Cloud API base URL.');
+    } else if (/your-tenant-api/.test(baseUrl)) {
+        errors.push(`SAP_BASE_URL is still the placeholder value. Replace it with your real tenant URL.`);
+    } else {
+        try {
+            const parsed = new URL(baseUrl);
+            if (!/^https?:$/.test(parsed.protocol)) {
+                errors.push(`SAP_BASE_URL must use http or https protocol: ${baseUrl}`);
+            }
+        } catch {
+            errors.push(`SAP_BASE_URL is not a valid URL: ${baseUrl}`);
         }
-    } catch {
-        errors.push(`SAP_BASE_URL is not a valid URL: ${baseUrl}`);
     }
 
     // 4. SAP_CLIENT format
@@ -858,8 +904,11 @@ async function main() {
     validateStartupConfig();
     initAuth(runtimeContext.auth);
 
-    // Initialize plugin system
-    const pluginDirs = [path.join(__dirname, 'plugins'), path.join(__dirname, 'examples')];
+    // Initialize plugin system — examples/ only loaded in admin mode
+    const pluginDirs = [path.join(__dirname, 'plugins')];
+    if (isAdminToolEnabled()) {
+        pluginDirs.push(path.join(__dirname, 'examples'));
+    }
     dynamicLoader = new DynamicLoader(server, pluginDirs);
 
     // Load plugins from configured directories
@@ -881,6 +930,7 @@ async function main() {
     console.error('[sap-s4-mcp] SAP credentials from:', process.env.SAP_CREDENTIALS_FILE || 'default user.txt');
     console.error('[sap-s4-mcp] Authentication enabled');
     console.error('[sap-s4-mcp] Debug tools:', isDebugToolEnabled() ? 'enabled' : 'disabled');
+    console.error('[sap-s4-mcp] Admin tools:', isAdminToolEnabled() ? 'enabled' : 'disabled');
     console.error('[sap-s4-mcp] Plugin system initialized with', dynamicLoader.listPlugins().length, 'plugins');
 
     process.on('SIGTERM', () => gracefulShutdown(transport));

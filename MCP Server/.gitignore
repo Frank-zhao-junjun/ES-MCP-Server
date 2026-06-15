@@ -1,0 +1,11 @@
+node_modules/
+*.log
+.env
+.DS_Store
+Thumbs.db
+
+# ── 运行时产物 ──
+_mcp_stderr.txt
+
+# ── 测试输出 ──
+test-output/
