@@ -1,6 +1,6 @@
 # Spec 003 — Master Data APIs
 
-> **Status**: ✅ Complete | **Version**: 0.3 | **Owner**: Backend
+> **Status**: ✅ Complete | **Version**: 0.3.0 | **Owner**: Backend
 >
 > Covers: US-005 (Stock), US-007 (Schema); plus Product, BP, CostCenter, BOM, SupplierInvoice
 >
@@ -27,12 +27,13 @@
 
 ### FR-004: Bill of Materials
 - `get_bom(material?, bomUsage?, plant?, includeComponents?, top?)`
-- V2 OData (`API_BILLOFMATERIAL_SRV`)
+- V2 OData (`API_BILL_OF_MATERIAL_SRV`)
 
 ### FR-005: Cost Center
 - `get_cost_center(costCenter?, controllingArea?, companyCode?, includeText?, top?)`
 - Multi-value cost center numbers
 - `includeText=true` fetches multilingual descriptions
+- V4 OData (`api_cost_center`)
 
 ### FR-006: Supplier Invoice
 - `get_supplier_invoice(supplierInvoice?, fiscalYear?, companyCode?, invoicingParty?, includeItems?, top?)`
@@ -97,7 +98,7 @@ mats.length === 1
 | `services/business-partner.js` | BP + Customer/Supplier (V2) |
 | `services/material-stock.js` | Material Stock (V2) |
 | `services/bom.js` | BOM (V2) |
-| `services/cost-center.js` | Cost Center (V2) |
+| `services/cost-center.js` | Cost Center (V4) |
 | `services/supplier-invoice.js` | Supplier Invoice (V2) |
 | `services/entity-schema.js` | $metadata parser |
 

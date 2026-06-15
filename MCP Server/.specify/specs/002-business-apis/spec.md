@@ -1,10 +1,10 @@
 # Spec 002 — Business Transaction APIs
 
-> **Status**: ✅ Complete | **Version**: 0.3 | **Owner**: Backend
+> **Status**: ✅ Complete | **Version**: 0.3.0 | **Owner**: Backend
 >
 > Covers: US-002 (Sales Order), US-003 (Trace), US-004 (Purchase Order)
 >
-> **SAP API Mapping**: US-API-003 (PO), US-API-010 (SO), US-API-013 (Billing), US-API-021 (Delivery)
+> **SAP API Mapping**: US-API-003 (PO), US-API-010 (SO), US-API-013 (Billing), US-API-015 (Production Order), US-API-021 (Delivery), US-API-022 (Material Document)
 
 ## 1. Functional Requirements
 
@@ -13,7 +13,7 @@
 - `salesOrder`: string, digits only, e.g. `"19"` or `"0000000019"`
 - Returns header + optionally items from V4 OData (`api_salesorder`)
 - Not found → `found: false`, warning in response
-- `top` default 20, max 50
+- `top` default 20, max 100
 
 ### FR-002: Trace Sales Order Lifecycle
 - `trace_sales_order(salesOrder, includeDeliveries?, includeProductionOrders?, includeMaterialDocuments?, includeBillingDocuments?, top?)`
@@ -24,7 +24,7 @@
   - Billing Document (`API_BILLING_DOCUMENT_SRV`)
 - Partial failure → `TRACE_PARTIAL_FAILURE` with successful data included
 - Each link independently toggleable
-- `top` default 20, max 50
+- `top` default 20, max 100
 
 ### FR-003: Get Purchase Order
 - `get_purchase_order(purchaseOrder?, supplier?, companyCode?, purchaseOrderType?, includeItems?, top?)`
@@ -32,6 +32,7 @@
 - Multi-value: comma-separated purchase order numbers
 - `includeItems=true` returns line items
 - V2 OData (`API_PURCHASEORDER_PROCESS_SRV`)
+- 注：US-API-003 / SAP_COM_0053 设计目标为 OData V4 (`api_purchaseorder_2`)，当前实现暂用 V2 服务，后续可平滑升级到 V4
 
 ## 2. Technical Design
 

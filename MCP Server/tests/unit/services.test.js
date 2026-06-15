@@ -228,9 +228,9 @@ async function testSalesOrderTopCapped() {
         { sapFetch: mockSapFetch, extractRows: mockExtractRows }
     );
 
-    // $top 应被截断到 MAX_TOP=50
+    // $top 应被截断到 MAX_TOP=100
     const itemCall = calls.find(u => u.includes('SalesOrderItem'));
-    assert.ok(itemCall.includes('$top=50'), `top should be capped at 50, got: ${itemCall}`);
+    assert.ok(itemCall.includes('$top=100'), `top should be capped at 100, got: ${itemCall}`);
 }
 
 // ════════════════════════════════════════════════════

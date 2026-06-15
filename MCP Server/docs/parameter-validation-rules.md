@@ -26,7 +26,8 @@
 ### 业务逻辑
 - 检查服务器健康状态
 - 验证配置文件可访问性
-- 可选地测试 SAP 连接性和场景可用性
+- 可选地测试 SAP 连接性 (`includeSapCheck`)
+- 可选地列出场景文件状态 (`includeScenarios`：返回场景文件总数、可用数、各场景详情)
 
 ## 3. list_sap_scenarios
 

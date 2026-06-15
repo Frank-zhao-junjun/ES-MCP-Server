@@ -1,6 +1,6 @@
 # PRD — SAP S/4HANA MCP Server
 
-> 版本: 0.3 | 更新: 2026-06-15 | 状态: MVP 完成 → 生产加固
+> 版本: 0.3.0 | 更新: 2026-06-15 | 状态: MVP 完成 → 生产加固
 
 ## 1. 产品概述
 
@@ -51,20 +51,20 @@
 | 能力 | 实现 |
 |---|---|
 | 认证 | PSK (`MCP_API_KEY`) + 失败锁定 (5次/30s) |
-| 角色 | `MCP_ROLE`: readonly / debug / admin |
+| 角色 | `MCP_ROLE`: readonly / debug / admin（默认 readonly）|
 | 限流 | 并发上限 5 + 每分钟 60 次 + 断路器 |
 | 脱敏 | SAP_BASE_URL 必填，无默认值 |
 | 审计 | 结构化 JSON 日志 (requestId/traceId/tool/duration) |
 
 ## 3. API 覆盖矩阵
 
-本 MCP Server 的 19 个工具覆盖了以下 SAP Communication Scenarios：
+本 MCP Server 的 17 个内置工具覆盖了以下 SAP Communication Scenarios（业务工具 + 调试/管理工具）：
 
 | MCP 工具 | 覆盖的 US-API | SAP_COM | 协议 |
 |---|---|---|---|
 | `get_sales_order_status` | US-API-010 | SAP_COM_0109 | OData V4 |
-| `trace_sales_order` | US-API-010/013/015/021/022 | SAP_COM_0109/0120/0106/0108 | V2+V4 |
-| `get_purchase_order` | US-API-003 | SAP_COM_0053 | OData V4 |
+| `trace_sales_order` | US-API-010/013/015/021/022 | SAP_COM_0109/0120/0522/0106/0108 | V2+V4 |
+| `get_purchase_order` | US-API-003 | SAP_COM_0053 | OData V4（当前实现暂用 V2 服务 `API_PURCHASEORDER_PROCESS_SRV`） |
 | `get_product` | US-API-002 | SAP_COM_0009 | V2+V4 |
 | `get_business_partner` | US-API-001 | SAP_COM_0008 | V2 |
 | `get_material_stock` | US-API-023 | SAP_COM_0164 | V2 |
@@ -73,6 +73,12 @@
 | `get_cost_center` | US-API-026 | SAP_COM_0943 | V4 |
 | `get_entity_schema` | 全部 | 全部 | V2+V4 |
 | `list_sap_scenarios` | 全部 29 个 API | 30+ SAP_COM | — |
+| `query_sap_scenario` | 全部 29 个 API | 30+ SAP_COM | V2+V4 |
+| `authenticate` | — | — | — |
+| `health_check` | — | — | — |
+| `load_plugin` | — | — | — |
+| `unload_plugin` | — | — | — |
+| `list_loaded_plugins` | — | — | — |
 
 > 完整 29 个 API 模块清单见 [../../docs/user-stories.md](../../docs/user-stories.md)（US-API-001 ~ US-API-029）
 
@@ -82,7 +88,7 @@
 - 多租户支持 ❌
 - Web UI 仪表盘 ❌
 - OAuth2/SAML 认证 ❌
-- 缓存层 ❌
+- 生产级分布式缓存 / Redis ❌
 
 ## 5. 架构决策记录
 
@@ -101,9 +107,11 @@
 - [ ] SAP 响应缓存（TTL 可配置）
 - [ ] 分页自动合并
 - [ ] Prometheus metrics 端点
+- [ ] 补齐高优先级业务 API：采购申请（US-API-004）、采购框架协议（US-API-005）、销售合同（US-API-011）、库存预留（US-API-024）
 
 ### v1.0
 - [ ] HTTP/SSE 传输 (MCP Streamable)
 - [ ] OAuth2 客户端凭据流
 - [ ] 租户级隔离
 - [ ] 生产部署 guide
+- [ ] 覆盖全部 29 个 US-API 模块：补齐生产（US-API-016/017/019/020）、物流（US-API-025）、财务（US-API-027）、系统集成（US-API-028/029）等剩余场景

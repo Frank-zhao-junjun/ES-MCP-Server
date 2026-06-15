@@ -329,11 +329,11 @@ server.tool(
 Parameters:
 - salesOrder: Sales Order number, e.g. "19" or "0000000019".
 - includeItems: Include Sales Order items, default true.
-- top: Max item records, default 20, max 50.`,
+- top: Max item records, default 20, max 100.`,
     {
         salesOrder: z.string().min(1).describe('Sales Order number, e.g. "19"'),
         includeItems: z.boolean().optional().default(true),
-        top: z.number().min(1).max(50).optional().default(20),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
     },
     wrapTool('get_sales_order_status', async (args) => {
         const authFailure = requireAuthenticatedTool('get_sales_order_status');
@@ -359,14 +359,14 @@ Parameters:
 - includeProductionOrders: Include production order data, default true.
 - includeMaterialDocuments: Include material movement documents, default true.
 - includeBillingDocuments: Include billing document data, default true.
-- top: Max records per entity, default 20, max 50.`,
+- top: Max records per entity, default 20, max 100.`,
     {
         salesOrder: z.string().min(1).describe('Sales Order number, e.g. "19"'),
         includeDeliveries: z.boolean().optional().default(true),
         includeProductionOrders: z.boolean().optional().default(true),
         includeMaterialDocuments: z.boolean().optional().default(true),
         includeBillingDocuments: z.boolean().optional().default(true),
-        top: z.number().min(1).max(50).optional().default(20),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
     },
     wrapTool('trace_sales_order', async (args) => {
         const authFailure = requireAuthenticatedTool('trace_sales_order');

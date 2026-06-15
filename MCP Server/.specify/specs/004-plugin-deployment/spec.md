@@ -1,6 +1,6 @@
 # Spec 004 — Plugin System & Deployment
 
-> **Status**: ✅ Complete | **Version**: 0.3 | **Owner**: Backend
+> **Status**: ✅ Complete | **Version**: 0.3.0 | **Owner**: Backend
 >
 > Covers: US-010 (Deployment); Plugin management tools; Observability
 

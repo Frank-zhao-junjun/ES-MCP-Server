@@ -37,7 +37,7 @@
 
 | 用户意图 | 推荐工具 | 备注 |
 | --- | --- | --- |
-| 检查服务是否可用 | `health_check` | 可设置 `includeSapCheck=false` 获得更快响应。 |
+| 检查服务是否可用 | `health_check` | 可设置 `includeSapCheck=false` 跳过 SAP 连通性测试；`includeScenarios=true` 返回场景列表详情。 |
 | 查询销售订单当前状态 | `get_sales_order_status` | 优先于 `trace_sales_order` 使用。 |
 | 追踪销售订单全链路 | `trace_sales_order` | 仅在需要交货、生产、物料凭证、开票链路时使用。 |
 | 查询采购订单 | `get_purchase_order` | 支持按采购订单、供应商、公司代码等过滤。 |

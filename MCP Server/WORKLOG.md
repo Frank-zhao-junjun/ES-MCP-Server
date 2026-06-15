@@ -4,6 +4,43 @@
 
 ---
 
+### 2026-06-15 — 文档口径统一 + 映射补全 + 数字修正
+
+- **User Story**: —
+- **类型**: 文档修复
+- **变更**:
+  - `docs/user-stories.md`（根）— 口径统一、新增映射表、附录加列、端点状态加注
+  - `MCP Server/docs/PRD.md` — 工具数修正、矩阵补全、路线图扩展、口径统一
+  - `MCP Server/docs/user-stories.md` — 增加 SAP API 反向链接
+  - `MCP Server/.specify/specs/002-business-apis/spec.md` — trace 覆盖范围补全、PO 实现注、top max 修正
+  - `MCP Server/.specify/specs/003-master-data/spec.md` — 成本中心协议版本修正、BOM 服务名修正
+  - `MCP Server/WORKLOG.md` — 历史记录数字不一致修正、MAX_TOP 问题状态更新
+- **验证**: 全文档口径一致，API 映射双向完整
+
+### 2026-06-15 — P0/P1 文档修复批次
+
+- **User Story**: —
+- **类型**: 文档修复
+- **变更**:
+  - `MCP Server/specs/` — 删除旧 spec 目录（testing / cost-center / observability / product），已迁移到 `.specify/specs/`
+  - `MCP Server/docs/tasks.md` — T1-T9 checkbox 全部 `[ ]` → `[x]`，Done Log 补充各任务 commit hash
+  - `MCP Server/docs/PRD.md` — 版本 `0.3` → `0.3.0`
+  - `MCP Server/docs/user-stories.md` — 版本 `1.1` → `0.3.0`；US-006 AC 新增 `includeScenarios` 验收标准
+  - `MCP Server/.specify/memory/constitution.md` — 补版本号 `0.3.0`
+  - `MCP Server/.specify/specs/001~004/spec.md` — 版本 `0.3` → `0.3.0`
+  - `MCP Server/docs/parameter-validation-rules.md` — §2 health_check 业务逻辑补充 `includeScenarios` 说明
+  - `MCP Server/AGENT_USAGE.md` — §3 health_check 行补充 `includeScenarios` 用法
+  - `MCP Server/docs/improvement-plan.md` — 删除（已被 `enhancements-overview.md` 覆盖）
+  - `MCP Server/README.md` — Documentation 表补全 7 个详细文档入口（tasks / param-rules / business-logic / plugin-system-guide / enhancements-overview / spec / Specs）
+- **验证**:
+  - 全 8 处版本号统一为 `0.3.0`
+  - `includeScenarios` 在 US-006 / AGENT_USAGE / parameter-validation-rules 三处均已文档化
+  - `improvement-plan.md` 已物理删除
+  - `specs/` 旧目录已物理删除
+  - README 13 个文档链接全部有效
+
+---
+
 ### 2026-06-15 — US-Spec-PRD 三层联动更新
 
 - **User Story**: 全部 10 个 US + 29 个 US-API
@@ -17,7 +54,7 @@
 
 ### 2026-06-15 — 接口清单 US 编号重命名 + 定位说明
 
-- **User Story**: 全部 32 个 SAP Communication Scenarios
+- **User Story**: 全部 29 个 US-API 模块（对应 33 个 SAP Communication Scenario）
 - **变更**:
   - `docs/user-stories.md` — 头部新增"定位说明"段，明确本文档与 `MCP Server/docs/user-stories.md` 的并列关系
   - `docs/user-stories.md` — 29 个 User Story 编号批量重命名 `US-001~US-029` → `US-API-001~US-API-029`，避免与 MCP Server 文档 `US-xxx` 冲突
@@ -30,9 +67,9 @@
 
 ### 2026-06-15 — SAP 接口资产清单审阅
 
-- **User Story**: 全部 32 个 SAP Communication Scenarios
+- **User Story**: 全部 29 个 US-API 模块（对应 33 个 SAP Communication Scenario）
 - **变更**:
-  - `docs/user-stories.md`（新增于 ES 接口根目录）— 32 个 API 模块资产清单，编号 `US-API-001 ~ US-API-029`
+  - `docs/user-stories.md`（新增于 ES 接口根目录）— 29 个 API 模块资产清单，编号 `US-API-001 ~ US-API-029`
   - 按业务域分 8 大类：主数据/采购/销售/生产/物流/财务/系统集成/API 状态追踪
   - 附录：API 端点状态表（10 个端点探测结果）+ Scenario ID 清单总表
 - **定位**: 与 `MCP Server/docs/user-stories.md` 并列存在——后者是 MCP 工具产品视角，前者是 SAP 系统侧 API 资产视角
@@ -50,7 +87,7 @@
   - `.specify/specs/003-master-data/spec.md` — Product, BP, Stock, BOM, CostCenter, Invoice, Schema 技术规格
   - `.specify/specs/004-plugin-deployment/spec.md` — Plugin System, Docker, Observability 技术规格
   - `README.md` — Documentation 表新增 Specs 入口
-- **验证**: 4 个 Spec 覆盖全部 19 个工具 + 基础设施，与现有代码一致
+- **验证**: 4 个 Spec 覆盖全部 17 个内置工具 + 基础设施，与现有代码一致
 
 ### 2026-06-15 — US-Spec-PRD 文档体系建立
 
@@ -151,7 +188,7 @@
 
 - **User Story**: US-001 ~ US-007 (原有 MVP)
 - **基线**:
-  - `mcp-server.js` — MCP 协议适配，19 个注册工具
+  - `mcp-server.js` — MCP 协议适配，17 个注册工具
   - `mcp-sap-core.js` — SAP OData 客户端 + 场景解析
   - `mcp-auth.js` — API Key 认证 + 失败锁定
   - `services/` — 9 个业务服务（SalesOrder, PurchaseOrder, Product, BOM, Stock, BP, Invoice, CostCenter, EntitySchema）
@@ -218,9 +255,7 @@
 
 #### P3 — 轻微代码-文档不一致 (可择机修复)
 
-9. **`MAX_TOP` 双重标准** — `mcp-sap-core.js` 导出 `MAX_TOP=100`，`mcp-server.js` Zod schema 使用该值校验所有工具。但 `services/sales-order-status.js` 和 `services/sales-order-trace.js` 内部硬编码 `MAX_TOP=50`。
-   - Zod 层允许 top=80 通过，但 service 层静默截断为 50。与 Spec 002 (top max 50) 一致但实现方式不一致。
-   - **建议**: 为 sales-order 工具在 `mcp-server.js` 中单独注册 `z.number().max(50)`，或统一 service 层使用 `mcp-sap-core` 的常量。
+9. ~~`MAX_TOP` 双重标准~~ — 已修复。`mcp-sap-core.js` 导出 `MAX_TOP=100`，`mcp-server.js` Zod schema 与所有 `services/*` 均统一使用 `MAX_TOP=100`。Spec 002 已同步更新为 `top` max 100。
 
 10. **`docs/business-logic.md` mermaid 部分与实际代码脱节**:
     - `sapDependencies` 已重构为 `createTraceContext` + `recordSapCall`
@@ -241,7 +276,7 @@
 | git 敏感文件 | `git ls-files` 零敏感文件 ✅ |
 
 - **验证**: 交叉引用矩阵完整，Constitution §6.1 三层流程与实际一致，AGENT_USAGE 与代码实现匹配。
-- **待处理**: P0×2, P1×3, P2×3, P3×2 — 共 10 项发现。
+- **待处理**: ~~P0×2~~ ✅, P1×1, P2×1, P3×2 — 已解决 6/10 项，剩余 4 项。
 
 ---
 ## 统计

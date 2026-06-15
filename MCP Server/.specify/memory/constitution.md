@@ -1,5 +1,7 @@
 # Project Constitution — SAP S/4HANA MCP Server
 
+> 版本: 0.3.0 | 更新: 2026-06-15
+
 ## 1. 定位与使命
 
 **定位**：面向 AI Agent 的 SAP S/4HANA Cloud 只读查询 MCP Server。

@@ -4,14 +4,27 @@ MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-o
 
 ## Documentation
 
+### 核心文档
+
 | 文档 | 描述 | 面向 |
 |---|---|---|
 | [PRD.md](./docs/PRD.md) | 产品需求文档 | 所有人 |
 | [user-stories.md](./docs/user-stories.md) | 10 个 User Story + 验收标准 | 产品/开发 |
-| [Specs](./.specify/specs/) | 4 个技术规格 (Core/Business/Master/Plugin) | 开发 |
-| [AGENT_USAGE.md](./AGENT_USAGE.md) | Agent 调用规则与安全边界 | AI Agent |
 | [constitution.md](./.specify/memory/constitution.md) | 项目宪法 | 开发 |
 | [WORKLOG.md](./WORKLOG.md) | 工作日志 | 所有人 |
+| [AGENT_USAGE.md](./AGENT_USAGE.md) | Agent 调用规则与安全边界 | AI Agent |
+
+### 详细文档
+
+| 文档 | 描述 | 面向 |
+|---|---|---|
+| [Specs](./.specify/specs/) | 4 个技术规格 (Core/Business/Master/Plugin) | 开发 |
+| [tasks.md](./docs/tasks.md) | 任务计划与完成追踪 | 开发 |
+| [parameter-validation-rules.md](./docs/parameter-validation-rules.md) | 每个工具的参数校验规则 | 开发 |
+| [business-logic.md](./docs/business-logic.md) | SAP 业务逻辑 mermaid 流程图 | 开发 |
+| [plugin-system-guide.md](./docs/plugin-system-guide.md) | 插件系统完整使用指南 | 开发 |
+| [enhancements-overview.md](./docs/enhancements-overview.md) | 全部增强功能概览 | 开发 |
+| [spec.md](./docs/spec.md) | Phase 2 & 3 技术规格 | 开发 |
 
 ## Current Tools
 

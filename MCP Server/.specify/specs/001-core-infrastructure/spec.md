@@ -1,6 +1,6 @@
 # Spec 001 — Core Infrastructure
 
-> **Status**: ✅ Complete | **Version**: 0.3 | **Owner**: Backend
+> **Status**: ✅ Complete | **Version**: 0.3.0 | **Owner**: Backend
 >
 > Covers: US-001 (Auth), US-006 (Health Check), US-008 (Roles), US-009 (Rate Limiting)
 

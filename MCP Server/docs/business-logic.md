@@ -100,25 +100,41 @@ flowchart TD
 
 ## 5. SAP 核心交互
 
-### sapFetch 函数
+### sapFetch 函数（含限流 + 断路器）
 
 ```mermaid
 flowchart TD
-    A[开始] --> B[获取 SAP 凭证]
-    B --> C{是否有上次成功凭证?}
-    C -->|是| D[优先使用上次成功凭证]
-    C -->|否| E[遍历所有凭证组合]
-    D --> F[构建 Basic Auth 头]
-    E --> F
-    F --> G[发起 HTTP 请求]
-    G --> H{响应成功?}
-    H -->|是| I[保存成功凭证<br/>返回响应]
-    H -->|否| J{状态码 401/403?}
-    J -->|是| K[尝试下一凭证组合]
-    J -->|否| L[返回错误]
-    K --> F
-    I --> M[结束]
-    L --> N[抛出错误]
+    A[开始] --> B[检查断路器状态]
+    B --> C{断路器是否 OPEN?}
+    C -->|是| D{熔断超时已过?}
+    D -->|否| E[返回 SAP_UNAVAILABLE]
+    D -->|是| F[重置断路器为 CLOSED]
+    C -->|否| F
+    F --> G[获取限流许可<br/>sapRateLimiter.acquire]
+    G --> H[获取 SAP 凭证]
+    H --> I{上次成功凭证?}
+    I -->|是| J[优先使用上次成功凭证]
+    I -->|否| K[遍历所有凭证组合]
+    J --> L[构建 Basic Auth 头<br/>设置 X-Request-ID]
+    K --> L
+    L --> M[发起 HTTP 请求<br/>含超时控制]
+    M --> N{响应成功?}
+    N -->|是| O[重置断路器<br/>记录成功凭证]
+    O --> P[释放限流许可]
+    P --> Q[返回响应数据]
+    N -->|否| R[记录失败状态码]
+    R --> S{401/403?}
+    S -->|是| T{还有凭证可试?}
+    T -->|是| L
+    T -->|否| U[生成 SAP_AUTH 错误]
+    S -->|否| V{可重试?}
+    V -->|是 且未超最大重试| W[指数退避等待]
+    W --> L
+    V -->|否| X[记录断路器失败]
+    X --> Y[释放限流许可]
+    Y --> Z[抛出错误]
+    U --> Y
+    E --> Z
 ```
 
 ### 凭证管理策略
@@ -184,24 +200,46 @@ flowchart TD
 
 ## 8. 可观测性集成
 
-### 请求包装器
+### 请求包装器（wrapTool）
 
 ```mermaid
 flowchart TD
-    A[开始] --> B[生成请求 ID 和追踪 ID]
-    B --> C[增加活跃请求数]
-    C --> D[执行实际工具处理器]
-    D --> E[捕获执行结果和异常]
-    E --> F[记录性能指标]
-    F --> G[生成结构化日志]
-    G --> H[减少活跃请求数]
-    H --> I[返回结果]
+    A[开始] --> B[检查服务是否关闭中]
+    B --> C[生成 traceId]
+    C --> D[createTraceContext<br/>创建追踪上下文]
+    D --> E[记录开始时间]
+    E --> F[执行工具处理器 handler]
+    F --> G{执行成功?}
+    G -->|是| H[计算耗时]
+    H --> I[metrics.recordRequest<br/>记录请求指标]
+    I --> J[metrics.recordSapCall<br/>批量记录 SAP 调用]
+    J --> K[返回成功响应]
+    G -->|否| L[捕获异常]
+    L --> M[metrics.recordRequest<br/>记录失败指标]
+    M --> N[返回失败响应]
 ```
 
-### 指标收集
-- 请求计数和成功率
-- 响应时间分布
-- 错误类型统计
+### SAP 调用追踪
+
+```mermaid
+flowchart TD
+    A[sapDependencies 注入] --> B[createTraceContext<br/>创建追踪上下文]
+    B --> C[sapFetch 包装器调用]
+    C --> D[记录 SAP 调用开始时间]
+    D --> E[执行 sapFetch]
+    E --> F{调用成功?}
+    F -->|是| G[metrics.recordSapCall<br/>ok=true]
+    G --> H[recordSapCall<br/>追加到 traceCtx.sapCalls]
+    H --> I[返回 SAP 响应]
+    F -->|否| J[metrics.recordSapCall<br/>ok=false]
+    J --> K[recordSapCall<br/>记录错误码到 traceCtx]
+    K --> L[抛出错误]
+```
+
+### 模块结构
+- `lib/observability.js` — `generateTraceId`, `createTraceContext`, `recordSapCall`, `MetricsStore`
+- `wrapTool()` — MCP 工具请求级别的追踪包装器
+- `sapDependencies()` — 注入到业务服务模块的 SAP 调用包装器，负责指标记录和链路追踪
 
 ## 9. 运行时上下文
 

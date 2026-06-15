@@ -3,7 +3,7 @@ const path = require('path');
 const { ErrorCodes, makeError } = require('../lib/errors');
 
 const DEFAULT_TOP = 20;
-const MAX_TOP = 50;
+const MAX_TOP = 100;
 const SAP_CLIENT = '100';
 
 let cachedTraceSteps = null;

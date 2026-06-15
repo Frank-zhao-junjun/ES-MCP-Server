@@ -1,6 +1,6 @@
 # User Stories — SAP S/4HANA MCP Server
 
-> 版本: 1.1 | 更新: 2026-06-15
+> 版本: 0.3.0 | 更新: 2026-06-15
 
 > **📋 交叉引用**：本文档描述 MCP 工具层的产品级用户故事。
 > 底层 SAP API 模块的资产清单见 [../../docs/user-stories.md](../../docs/user-stories.md)（US-API-001 ~ US-API-029，按主数据/采购/销售/生产/物流/财务/系统集成 8 大类编排）。
@@ -45,11 +45,12 @@
 - [x] 不存在的订单返回 `found: false`
 - [x] 支持 `includeItems=false` 只查头
 - [x] 销售订单号只允许数字字符
-- [x] `top` 默认 20，最大 50
+- [x] `top` 默认 20，最大 100
 
 ### 关联
 - PRD §2.1
 - 工具: `get_sales_order_status`
+- SAP API: [US-API-010](../../docs/user-stories.md#us-api-010-销售订单同步)
 
 ---
 
@@ -64,11 +65,12 @@
 - [x] 部分失败返回 `TRACE_PARTIAL_FAILURE` + 成功数据
 - [x] 每个链路可独立开关 (`includeDeliveries` 等)
 - [x] 全成功返回全量数据
-- [x] `top` 默认 20，最大 50
+- [x] `top` 默认 20，最大 100
 
 ### 关联
 - PRD §2.1
 - 工具: `trace_sales_order`
+- SAP API: US-API-010/013/015/021/022（详见 [SAP API Inventory 映射表](../../docs/user-stories.md)）
 
 ---
 
@@ -87,6 +89,7 @@
 ### 关联
 - PRD §2.1
 - 工具: `get_purchase_order`
+- SAP API: [US-API-003](../../docs/user-stories.md#us-api-003-采购订单查询)
 
 ---
 
@@ -104,6 +107,7 @@
 ### 关联
 - PRD §2.1
 - 工具: `get_material_stock`
+- SAP API: [US-API-023](../../docs/user-stories.md#us-api-023-库存查询)
 
 ---
 
@@ -117,6 +121,7 @@
 - [x] 未认证只返回 `server.ok` + `auth.ok: false`
 - [x] 已认证返回凭据文件/场景目录/SAP 连通性/指标
 - [x] `includeSapCheck=false` 跳过真实 SAP 调用
+- [x] `includeScenarios=true` 返回场景列表状态（文件数 / 可用数 / 详情）
 - [x] 场景文件缺失/不可读时 warning
 
 ### 关联
@@ -139,6 +144,7 @@
 ### 关联
 - PRD §2.1
 - 工具: `get_entity_schema`
+- SAP API: 全部 29 个 US-API 模块（元数据解析）
 
 ---
 
@@ -199,6 +205,134 @@
 
 ---
 
+## US-011: 查询产品主数据
+
+**As** 业务 Agent
+**I want** 按产品编号或名称查询产品主数据
+**So that** 我能回答"产品 FG10 的规格和单位是什么"
+
+### Acceptance Criteria
+- [x] `get_product("FG10")` 返回产品基本属性（描述、规格、单位）
+- [x] 支持 `includeDescription=true` 获取多语言描述
+- [x] 不存在的产品返回 `found: false`
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_product`
+
+---
+
+## US-012: 查询业务伙伴
+
+**As** 业务 Agent
+**I want** 按编号或名称查询客户/供应商主数据
+**So that** 我能回答"客户 C001 的公司代码和销售范围是什么"
+
+### Acceptance Criteria
+- [x] `get_business_partner("C001")` 返回 BP 基本属性
+- [x] 支持客户/供应商类型过滤
+- [x] 支持 `includeSupplier=true` 获取供应商扩展信息
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_business_partner`
+
+---
+
+## US-013: 查询物料清单（BOM）
+
+**As** 业务 Agent
+**I want** 按物料编号查询 BOM 结构
+**So that** 我能回答"产品 FG10 由哪些组件构成"
+
+### Acceptance Criteria
+- [x] `get_bom("FG10")` 返回 BOM 头 + 组件列表
+- [x] 支持 `includeComponents=true` 展开组件明细
+- [x] 不存在的 BOM 返回空组件列表
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_bom`
+
+---
+
+## US-014: 查询供应商发票
+
+**As** 业务 Agent
+**I want** 按供应商或 PO 号查询发票
+**So that** 我能回答"供应商 X 的发票付款状态是什么"
+
+### Acceptance Criteria
+- [x] `get_supplier_invoice` 支持按供应商/PO号/日期过滤
+- [x] 支持 `includeItems=true` 返回发票行项目
+- [x] 至少一个过滤条件
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_supplier_invoice`
+
+---
+
+## US-015: 查询成本中心
+
+**As** 业务 Agent
+**I want** 按编号或名称查询成本中心
+**So that** 我能回答"成本中心 CC001 的负责人和层次结构是什么"
+
+### Acceptance Criteria
+- [x] `get_cost_center("CC001")` 返回成本中心主数据
+- [x] 支持 `includeText=true` 获取描述文本
+- [x] 不存在的成本中心返回 `found: false`
+- [x] `top` 默认 20，最大 100
+
+### 关联
+- PRD §2.1
+- 工具: `get_cost_center`
+
+---
+
+## US-016: SAP 场景管理
+
+**As** 运维 Agent / 业务 Agent
+**I want** 浏览和查询已配置的 SAP 通信场景
+**So that** 我能发现可用的 SAP API 并执行自定义查询
+
+### Acceptance Criteria
+- [x] `list_sap_scenarios` 返回所有场景的 key/code/title/端点数量
+- [x] `query_sap_scenario(key, filter)` 对指定场景执行 OData 查询
+- [x] 支持 `$top` / `$skip` 分页
+- [x] 未知场景返回 `SCENARIO_NOT_FOUND`
+- [x] 自动从场景文件解析 $metadata 发现 EntitySet
+
+### 关联
+- PRD §2.1
+- 工具: `list_sap_scenarios`, `query_sap_scenario`
+
+---
+
+## US-017: 插件系统管理
+
+**As** 管理 Agent
+**I want** 动态加载/卸载/查看 MCP 工具插件
+**So that** 无需重启服务器即可扩展工具能力
+
+### Acceptance Criteria
+- [x] `load_plugin(pluginPath)` 热加载 `.js` 插件文件并注册工具
+- [x] `unload_plugin(pluginId)` 移除已加载插件及其工具
+- [x] `list_loaded_plugins` 返回所有已加载插件的 ID/路径/工具列表
+- [x] 仅 admin 角色可访问
+- [x] 重复加载同一插件返回 `PLUGIN_ALREADY_LOADED`
+
+### 关联
+- PRD §2.2 / §4
+- 工具: `load_plugin`, `unload_plugin`, `list_loaded_plugins`
+
+---
+
 ## 状态摘要
 
 | US | 标题 | 状态 |
@@ -213,3 +347,10 @@
 | US-008 | 角色权限控制 | ✅ 完成 |
 | US-009 | SAP 调用限流 | ✅ 完成 |
 | US-010 | 容器化部署 | ✅ 完成 |
+| US-011 | 查询产品主数据 | ✅ 完成 |
+| US-012 | 查询业务伙伴 | ✅ 完成 |
+| US-013 | 查询物料清单（BOM） | ✅ 完成 |
+| US-014 | 查询供应商发票 | ✅ 完成 |
+| US-015 | 查询成本中心 | ✅ 完成 |
+| US-016 | SAP 场景管理 | ✅ 完成 |
+| US-017 | 插件系统管理 | ✅ 完成 |
