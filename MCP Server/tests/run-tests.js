@@ -12,6 +12,10 @@ const mcpSapCore = require('./unit/mcp-sap-core.test');
 const sapCache = require('./unit/sap-cache.test');
 const autoPagination = require('./unit/auto-pagination.test');
 const metricsServer = require('./unit/metrics-server.test');
+const rateLimiter = require('./unit/rate-limiter.test');
+const roles = require('./unit/roles.test');
+const dynamicLoader = require('./unit/dynamic-loader.test');
+const pluginLoader = require('./unit/plugin-loader.test');
 const services = require('./unit/services.test');
 const costCenter = require('./unit/cost-center.test');
 const product = require('./unit/product.test');
@@ -21,6 +25,10 @@ const materialStock = require('./unit/material-stock.test');
 const bom = require('./unit/bom.test');
 const supplierInvoice = require('./unit/supplier-invoice.test');
 const entitySchema = require('./unit/entity-schema.test');
+const purchaseRequisition = require('./unit/purchase-requisition.test');
+const scheduleAgreement = require('./unit/schedule-agreement.test');
+const salesContract = require('./unit/sales-contract.test');
+const materialReservation = require('./unit/material-reservation.test');
 const sapIntegration = require('./integration/sap-integration.test');
 
 async function main() {
@@ -41,6 +49,10 @@ async function main() {
     sapCache.run();
     await autoPagination.run();
     await metricsServer.run();
+    await rateLimiter.run();
+    await roles.run();
+    dynamicLoader.run();
+    await pluginLoader.run();
     await services.run();
     await costCenter.run();
     await product.run();
@@ -50,6 +62,10 @@ async function main() {
     await bom.run();
     await supplierInvoice.run();
     entitySchema.run();
+    await purchaseRequisition.run();
+    await scheduleAgreement.run();
+    await salesContract.run();
+    await materialReservation.run();
     console.log('');
 
     // ── Integration Tests ──

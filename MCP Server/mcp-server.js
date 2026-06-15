@@ -37,6 +37,10 @@ const { getMaterialStock } = require('./services/material-stock');
 const { getBOM } = require('./services/bom');
 const { getSupplierInvoice } = require('./services/supplier-invoice');
 const { getEntitySchema } = require('./services/entity-schema');
+const { getPurchaseRequisition } = require('./services/purchase-requisition');
+const { getScheduleAgreement } = require('./services/schedule-agreement');
+const { getSalesContract } = require('./services/sales-contract');
+const { getMaterialReservation } = require('./services/material-reservation');
 
 // Plugin system
 const DynamicLoader = require('./lib/dynamic-loader');
@@ -889,6 +893,160 @@ Parameters:
             return textJson(toolSuccess('get_entity_schema', data));
         } catch (err) {
             return textJson(toolFailure('get_entity_schema', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_purchase_requisition
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_purchase_requisition',
+    `Query SAP Purchase Requisition header and items. Returns PR details including purchasing organization, purchasing group, supplier, status, and optionally line items.
+
+Parameters:
+- purchaseRequisition: PR number(s), single "1000001" or comma-separated "1000001,1000002".
+- purchasingOrganization: Purchasing organization code.
+- purchasingGroup: Purchasing group code.
+- supplier: Supplier BP number.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Number of records to skip (for pagination), default 0.`,
+    {
+        purchaseRequisition: z.string().optional().describe('PR number(s), e.g. "1000001" or "1000001,1000002"'),
+        purchasingOrganization: z.string().optional().describe('Purchasing organization code'),
+        purchasingGroup: z.string().optional().describe('Purchasing group code'),
+        supplier: z.string().optional().describe('Supplier BP number'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_purchase_requisition', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_purchase_requisition');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getPurchaseRequisition(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No purchase requisitions found'] : [];
+            return textJson(toolSuccess('get_purchase_requisition', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_purchase_requisition', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_schedule_agreement
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_schedule_agreement',
+    `Query SAP Schedule Agreement header and items. Returns scheduling agreement details including supplier, purchasing organization, validity dates, and optionally line items with delivery schedules.
+
+Parameters:
+- scheduleAgreement: Schedule Agreement number(s), single "5500000001" or comma-separated.
+- supplier: Supplier BP number.
+- purchasingOrganization: Purchasing organization code.
+- purchasingGroup: Purchasing group code.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Number of records to skip (for pagination), default 0.`,
+    {
+        scheduleAgreement: z.string().optional().describe('Schedule Agreement number(s), e.g. "5500000001"'),
+        supplier: z.string().optional().describe('Supplier BP number'),
+        purchasingOrganization: z.string().optional().describe('Purchasing organization code'),
+        purchasingGroup: z.string().optional().describe('Purchasing group code'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_schedule_agreement', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_schedule_agreement');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getScheduleAgreement(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No schedule agreements found'] : [];
+            return textJson(toolSuccess('get_schedule_agreement', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_schedule_agreement', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_sales_contract
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_sales_contract',
+    `Query SAP Sales Contract header and items. Returns sales contract details including sold-to party, sales organization, validity dates, status, and optionally line items.
+
+Parameters:
+- salesContract: Sales Contract number(s), single "4000000001" or comma-separated.
+- customer: Sold-to party (customer) BP number.
+- salesOrganization: Sales organization code.
+- distributionChannel: Distribution channel code.
+- division: Division code.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Number of records to skip (for pagination), default 0.`,
+    {
+        salesContract: z.string().optional().describe('Sales Contract number(s), e.g. "4000000001"'),
+        customer: z.string().optional().describe('Sold-to party (customer) BP number'),
+        salesOrganization: z.string().optional().describe('Sales organization code'),
+        distributionChannel: z.string().optional().describe('Distribution channel code'),
+        division: z.string().optional().describe('Division code'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_sales_contract', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_sales_contract');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getSalesContract(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No sales contracts found'] : [];
+            return textJson(toolSuccess('get_sales_contract', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_sales_contract', normalizeError(err, ErrorCodes.QUERY_FAILED)));
+        }
+    })
+);
+
+// ────────────────────────────────────────────────────
+// Tool: get_material_reservation
+// ────────────────────────────────────────────────────
+
+server.tool(
+    'get_material_reservation',
+    `Query SAP Material Reservation header and items. Returns reservation details including material, plant, requirement quantity, movement type, and optionally line items.
+
+Parameters:
+- reservation: Reservation number(s), single "10000001" or comma-separated.
+- material: Material number.
+- plant: Plant code.
+- requirementNumber: Requirement number.
+- includeItems: Include line items (default true).
+- top: Max records, default 20, max 100.
+- skip: Number of records to skip (for pagination), default 0.`,
+    {
+        reservation: z.string().optional().describe('Reservation number(s), e.g. "10000001"'),
+        material: z.string().optional().describe('Material number'),
+        plant: z.string().optional().describe('Plant code'),
+        requirementNumber: z.string().optional().describe('Requirement number'),
+        includeItems: z.boolean().optional().default(true),
+        top: z.number().min(1).max(MAX_TOP).optional().default(20),
+        skip: z.number().min(0).optional().default(0).describe('Records to skip for pagination'),
+    },
+    wrapTool('get_material_reservation', async (args) => {
+        const authFailure = requireAuthenticatedTool('get_material_reservation');
+        if (authFailure) return authFailure;
+        try {
+            const data = await getMaterialReservation(args, sapDependencies(args._traceId));
+            const warnings = data.count === 0 ? ['No material reservations found'] : [];
+            return textJson(toolSuccess('get_material_reservation', data, warnings));
+        } catch (err) {
+            return textJson(toolFailure('get_material_reservation', normalizeError(err, ErrorCodes.QUERY_FAILED)));
         }
     })
 );

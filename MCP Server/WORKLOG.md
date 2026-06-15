@@ -41,6 +41,18 @@
   - `_upgrade-v04.js` — 删除（一次性升级脚本，已完成使命）
 - **验证**: `node --check` 全文件通过，`npm test` ✅ 全绿 273ms
 
+### 2026-06-15 — 补全 4 个缺失单元测试（覆盖率 26/26）
+
+- **User Story**: —
+- **类型**: 测试补全
+- **变更**:
+  - `tests/unit/rate-limiter.test.js` — 限流器 5 个测试（获取/释放/排队/唤醒/防负）
+  - `tests/unit/roles.test.js` — 角色模型 9 个测试（默认/debug/admin/未知/覆盖/多键/纯函数）
+  - `tests/unit/dynamic-loader.test.js` — 动态加载器 8 个测试（路径白名单/遍历攻击/工具生命周期）
+  - `tests/unit/plugin-loader.test.js` — 插件加载器 10 个测试（校验/注册/冲突/卸载）
+  - `tests/run-tests.js` — 引入 4 个新测试模块
+- **验证**: `npm test` ✅ 全绿 — 26 个单元测试 + 1 个集成测试，覆盖率 26/26 模块
+
 ### 2026-06-15 — 审计修复：PRD/US/Spec 与代码一致性同步
 
 - **User Story**: —
