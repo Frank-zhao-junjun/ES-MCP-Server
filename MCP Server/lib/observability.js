@@ -59,6 +59,9 @@ class MetricsStore {
         this.sapTotalDurationMs = 0;
         this.sapErrors = 0;
         this.toolDurations = {};  // { toolName: [durationMs, ...] }
+        this.sapCallDurations = []; // [durationMs, ...] for Prometheus histogram
+        this.cacheHits = 0;
+        this.cacheMisses = 0;
     }
 
     recordRequest(tool, durationMs, ok) {
@@ -78,9 +81,32 @@ class MetricsStore {
     recordSapCall(durationMs, ok) {
         this.sapCallCount++;
         this.sapTotalDurationMs += durationMs;
+        this.sapCallDurations.push(durationMs);
         if (!ok) {
             this.sapErrors++;
         }
+    }
+
+    recordCacheHit() {
+        this.cacheHits++;
+    }
+
+    recordCacheMiss() {
+        this.cacheMisses++;
+    }
+
+    /**
+     * 获取所有请求耗时（扁平化），供 Prometheus 直方图使用
+     */
+    getRequestDurations() {
+        return Object.values(this.toolDurations).flat();
+    }
+
+    /**
+     * 获取所有 SAP 调用耗时，供 Prometheus 直方图使用
+     */
+    getSapCallDurations() {
+        return this.sapCallDurations;
     }
 
     /**

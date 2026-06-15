@@ -4,6 +4,22 @@
 
 ---
 
+### 2026-06-15 — 核心重构：认证增强 + 角色扩展 + 销售订单增强 + 服务端改进
+
+- **User Story**: US-001, US-002, US-003, US-008
+- **类型**: Feature + Refactor
+- **变更**:
+  - `mcp-auth.js` (+139) — 认证增强
+  - `lib/roles.js` (+37) — 角色模型扩展
+  - `mcp-server.js` (+334) — MCP 服务端重构/增强
+  - `services/sales-order-status.js` (+52) — 销售订单查询增强
+  - `services/sales-order-trace.js` (+73) — 销售订单追踪增强
+  - `mcp-sap-core.js` (+22) — SAP 核心调整
+  - `lib/observability.js` (+26) — 可观测性改进
+  - `server.js` (根) (+98) — Express 服务端改进
+  - `package.json` (+8) — 依赖/脚本更新
+- **验证**: 待 `npm test` 确认
+
 ### 2026-06-15 — API 连通性探测 + AC 标记 + 部署指南
 
 - **User Story**: US-API-001 ~ US-API-029

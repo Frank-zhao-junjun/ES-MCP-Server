@@ -2,6 +2,44 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
+// 引入prom-client库用于Prometheus指标
+const client = require('prom-client');
+const register = new client.Registry();
+
+// 创建自定义指标
+const httpRequestTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code']
+});
+
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.1, 0.5, 1, 2, 5, 10]
+});
+
+const sapApiCallsTotal = new client.Counter({
+  name: 'sap_api_calls_total',
+  help: 'Total number of SAP API calls made',
+  labelNames: ['endpoint', 'status']
+});
+
+const activeConnections = new client.Gauge({
+  name: 'active_connections',
+  help: 'Number of active connections'
+});
+
+// 注册指标
+register.registerMetric(httpRequestTotal);
+register.registerMetric(httpRequestDuration);
+register.registerMetric(sapApiCallsTotal);
+register.registerMetric(activeConnections);
+
+// 注册默认指标到新的 register
+client.collectDefaultMetrics({ register });
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -9,6 +47,32 @@ const SAP_HOST = process.env.SAP_BASE_URL || 'https://your-tenant-api.s4hana.sap
 const SAP_CLIENT = '100';
 const TOP_N = '20';
 const scenarioDir = __dirname;
+
+// 添加中间件来收集HTTP请求指标
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  // 记录活跃连接
+  activeConnections.inc();
+  
+  // 记录请求结束
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000; // 转换为秒
+    const route = req.route ? req.route.path : req.path;
+    const statusCode = res.statusCode.toString();
+    
+    // 记录请求总数
+    httpRequestTotal.labels(req.method, route, statusCode).inc();
+    
+    // 记录请求持续时间
+    httpRequestDuration.labels(req.method, route, statusCode).observe(duration);
+    
+    // 减少活跃连接数
+    activeConnections.dec();
+  });
+  
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -41,6 +105,9 @@ function buildBaseAuth(user, pass) {
 async function fetchWithAnyCredential(fullPathWithQuery) {
   const { users, passwords } = parseCredentialsFromUserTxt();
   if (!users.length || !passwords.length) {
+    // 记录API调用失败
+    const endpointLabel = fullPathWithQuery.split('/')[3] || 'unknown';
+    sapApiCallsTotal.labels(endpointLabel, 'error').inc();
     throw new Error('无法从 user.txt 解析 SAP 凭据');
   }
 
@@ -61,6 +128,8 @@ async function fetchWithAnyCredential(fullPathWithQuery) {
     attempts.unshift(fetchWithAnyCredential.lastGood);
   }
 
+  const endpointLabel = fullPathWithQuery.split('/')[3] || 'unknown';
+
   for (const attempt of attempts) {
     try {
       const resp = await fetch(url, {
@@ -74,11 +143,17 @@ async function fetchWithAnyCredential(fullPathWithQuery) {
 
       if (resp.ok) {
         fetchWithAnyCredential.lastGood = { user: attempt.user, password: attempt.password };
+        // 记录成功的API调用
+        sapApiCallsTotal.labels(endpointLabel, 'success').inc();
         return await resp.json();
       }
 
       lastError = new Error(`SAP HTTP ${resp.status}`);
+      // 记录失败的API调用
+      sapApiCallsTotal.labels(endpointLabel, 'error').inc();
     } catch (err) {
+      // 记录异常的API调用
+      sapApiCallsTotal.labels(endpointLabel, 'error').inc();
       lastError = err;
     }
   }
@@ -613,6 +688,27 @@ app.get('/api/field-labels', (req, res) => {
   });
 });
 
+// Prometheus metrics 端点
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    const metrics = await register.metrics();
+    res.end(metrics);
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
+});
+
+// 健康检查端点
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`SAP UI 服务已启动: http://localhost:${PORT}`);
+  console.log(`Metrics 端点: http://localhost:${PORT}/metrics`);
 });

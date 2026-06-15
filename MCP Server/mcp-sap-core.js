@@ -2,12 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const { ErrorCodes, makeError, errorCodeFromSapStatus } = require('./lib/errors');
 const { sapRateLimiter } = require('./lib/rate-limiter');
+const { SapCache } = require('./lib/sap-cache');
+const { extractNextLink } = require('./lib/auto-pagination');
 
 const SAP_BASE_URL = process.env.SAP_BASE_URL || 'https://your-tenant-api.s4hana.sapcloud.cn';
 const SAP_CLIENT = process.env.SAP_CLIENT || '100';
 const DEFAULT_TOP = 20;
 const MAX_TOP = 100;
 const REQUEST_TIMEOUT_MS = Number(process.env.SAP_REQUEST_TIMEOUT_MS || 30000);
+
+// ── SAP Response Cache ────────────────────────────────
+const SAP_CACHE_TTL_MS = Number(process.env.SAP_CACHE_TTL_MS || 0);
+const sapResponseCache = new SapCache({ ttlMs: SAP_CACHE_TTL_MS });
 
 let cachedCredentials = null;
 let cachedCredentialMtime = 0;
@@ -157,7 +163,10 @@ async function sapFetchOnce(urlPath, context) {
             }
 
             lastBody = await resp.text().catch(() => '');
-            if (resp.status !== 401 && resp.status !== 403) {
+            // Auth failure → invalidate cache to prevent poisoned entries
+            if (resp.status === 401 || resp.status === 403) {
+                sapResponseCache.invalidateAll();
+            } else {
                 break;
             }
         } catch (err) {
@@ -183,6 +192,13 @@ async function sapFetchOnce(urlPath, context) {
 
 async function sapFetch(urlPath, context = defaultSapContext) {
     checkCircuitBreaker();
+
+    // ── Cache check (before rate limiter) ──
+    const cached = sapResponseCache.get(urlPath);
+    if (cached) {
+        return cached;
+    }
+
     await sapRateLimiter.acquire();
 
     const MAX_RETRIES = 2;
@@ -193,6 +209,8 @@ async function sapFetch(urlPath, context = defaultSapContext) {
             try {
                 const result = await sapFetchOnce(urlPath, context);
                 resetCircuitBreaker();
+                // ── Store successful response in cache ──
+                sapResponseCache.set(urlPath, result);
                 return result;
             } catch (err) {
                 lastErr = err;
@@ -423,4 +441,6 @@ module.exports = {
     DEFAULT_TOP,
     MAX_TOP,
     REQUEST_TIMEOUT_MS,
+    sapResponseCache,
+    extractNextLink,
 };

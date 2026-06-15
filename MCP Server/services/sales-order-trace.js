@@ -49,15 +49,55 @@ function buildFilterFromTemplate(template, normalizedSalesOrder) {
     return encodeUriStrict(filter);
 }
 
-function buildUrl(step, top, normalizedSalesOrder) {
+function buildUrl(step, top, normalizedSalesOrder, skip = 0) {
     const params = [
         step.formatJson ? '$format=json' : null,
         `sap-client=${SAP_CLIENT}`,
         `$top=${top}`,
+        skip > 0 ? `$skip=${skip}` : null,
         `$filter=${buildFilterFromTemplate(step.filterTemplate, normalizedSalesOrder)}`,
     ].filter(Boolean);
 
     return `${step.url}?${params.join('&')}`;
+}
+
+// 获取所有分页数据的辅助函数
+async function fetchAllPages(step, normalizedSalesOrder, dependencies, maxRecords = 1000) {
+    const { sapFetch, extractRows } = dependencies;
+    let allRows = [];
+    let skip = 0;
+    const batchSize = Math.min(100, maxRecords); // 每次获取最多100条记录
+    
+    try {
+        while (allRows.length < maxRecords) {
+            const url = buildUrl(step, batchSize, normalizedSalesOrder, skip);
+            
+            const data = await sapFetch(url);
+            const rows = extractRows(data);
+            
+            if (!rows || rows.length === 0) {
+                break; // 没有更多数据了
+            }
+            
+            allRows = allRows.concat(rows);
+            
+            if (rows.length < batchSize) {
+                break; // 最后一批数据不足batchSize，说明已获取完所有数据
+            }
+            
+            skip += batchSize;
+            
+            // 检查是否达到最大记录数限制
+            if (allRows.length >= maxRecords) {
+                break;
+            }
+        }
+    } catch (err) {
+        // 如果分页查询失败，记录警告但返回已获取的数据
+        console.warn(`Warning: Failed to fetch all pages for ${step.id}, returning partial data:`, err.message);
+    }
+    
+    return allRows;
 }
 
 async function traceSalesOrder(args, dependencies) {
@@ -68,6 +108,7 @@ async function traceSalesOrder(args, dependencies) {
         includeMaterialDocuments = true,
         includeBillingDocuments = true,
         top = DEFAULT_TOP,
+        getAllData = false, // 新增参数，控制是否获取全部分页数据
     } = args;
     const { sapFetch, extractRows } = dependencies;
     const normalizedTop = Math.min(top || DEFAULT_TOP, MAX_TOP);
@@ -104,8 +145,23 @@ async function traceSalesOrder(args, dependencies) {
     }
 
     try {
-        const url = `/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrderItem?$top=${normalizedTop}&sap-client=${SAP_CLIENT}&$filter=${buildSalesOrderFilter('SalesOrder')}`;
-        data.items = extractRows(await sapFetch(url));
+        // 获取销售订单行项目 - 支持分页
+        if (getAllData) {
+            // 获取所有项目数据
+            const baseUrl = '/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrderItem';
+            const filter = buildFilterFromTemplate('{salesOrder}', normalizedSalesOrder);
+            // 构建基础URL，然后在fetchAllPages中处理分页
+            const stepConfig = {
+                url: baseUrl,
+                formatJson: false,
+                filterTemplate: `SalesOrder eq '{salesOrder}'`
+            };
+            data.items = await fetchAllPages(stepConfig, normalizedSalesOrder, dependencies);
+        } else {
+            const url = `/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrderItem?$top=${normalizedTop}&sap-client=${SAP_CLIENT}&$filter=${buildSalesOrderFilter('SalesOrder')}`;
+            data.items = extractRows(await sapFetch(url));
+        }
+        
         if (data.items.length === 0) {
             warnings.push('No Sales Order items found');
         }
@@ -118,7 +174,14 @@ async function traceSalesOrder(args, dependencies) {
         if (!includeOptions[step.includeFlag]) continue;
 
         try {
-            data[step.resultKey] = extractRows(await sapFetch(buildUrl(step, normalizedTop, normalizedSalesOrder)));
+            // 根据getAllData标志决定是否获取全部分页数据
+            if (getAllData) {
+                data[step.resultKey] = await fetchAllPages(step, normalizedSalesOrder, dependencies);
+            } else {
+                const url = buildUrl(step, normalizedTop, normalizedSalesOrder);
+                data[step.resultKey] = extractRows(await sapFetch(url));
+            }
+            
             if (data[step.resultKey].length === 0) {
                 warnings.push(step.emptyWarning);
             }
