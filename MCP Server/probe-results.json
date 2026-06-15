@@ -1,0 +1,298 @@
+[
+  {
+    "us": "US-API-001",
+    "code": "SAP_COM_0008",
+    "entity": "A_BusinessPartner",
+    "desc": "业务伙伴",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-002",
+    "code": "SAP_COM_0009",
+    "entity": "Product",
+    "desc": "产品主数据",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-003",
+    "code": "SAP_COM_0053",
+    "entity": "A_PurchaseOrder",
+    "desc": "采购订单",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-004",
+    "code": "SAP_COM_0102",
+    "entity": "A_PurchaseRequisition",
+    "desc": "采购申请",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-005",
+    "code": "SAP_COM_0103",
+    "entity": "A_SchedgAgrmtHeader",
+    "desc": "计划协议",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-006",
+    "code": "SAP_COM_0057",
+    "entity": "A_SupplierInvoice",
+    "desc": "供应商发票",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SupplierInvoice?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-007",
+    "code": "SAP_COM_0113",
+    "entity": "A_PurchaseRFQ",
+    "desc": "采购询价",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-008",
+    "code": "SAP_COM_0122",
+    "entity": "A_SupEvalScorecard",
+    "desc": "供应商评估",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-009",
+    "code": "SAP_COM_0146",
+    "entity": "A_ServiceEntrySheet",
+    "desc": "服务确认单",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-010",
+    "code": "SAP_COM_0109",
+    "entity": "SalesOrder",
+    "desc": "销售订单",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-011",
+    "code": "SAP_COM_0119",
+    "entity": "A_SalesContract",
+    "desc": "销售合同",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-012",
+    "code": "SAP_COM_0113",
+    "entity": "A_SalesQuotation",
+    "desc": "销售报价",
+    "v2": true,
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-013",
+    "code": "SAP_COM_0120",
+    "entity": "A_BillingDocument",
+    "desc": "销售开票",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-014",
+    "code": "SAP_COM_0294",
+    "entity": "A_SlsPrcgCndnRecdValidity",
+    "desc": "价格条件",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-015",
+    "code": "SAP_COM_0522",
+    "entity": "ProductionOrder",
+    "desc": "生产订单",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/ProductionOrder?$top=1"
+  },
+  {
+    "us": "US-API-016",
+    "code": "SAP_COM_0104",
+    "entity": "A_PlannedOrder",
+    "desc": "生产数据",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata/sap/API_PLANNED_ORDERS/A_PlannedOrder?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-017",
+    "code": "SAP_COM_0522",
+    "entity": "ProdnOrderConfirmation",
+    "desc": "生产确认",
+    "v2": true,
+    "status": "ERROR",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-018",
+    "code": "SAP_COM_0105",
+    "entity": "A_BillOfMaterial",
+    "desc": "BOM",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-019",
+    "code": "SAP_COM_0519",
+    "entity": "A_RoutingHeader",
+    "desc": "工艺路线",
+    "v2": true,
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-020",
+    "code": "SAP_COM_0110",
+    "entity": "A_InspectionMethod",
+    "desc": "质检数据",
+    "v2": true,
+    "status": "EMPTY",
+    "httpStatus": 200,
+    "records": 0,
+    "url": "/sap/opu/odata/sap/API_INSPECTIONMETHOD_SRV/A_InspectionMethod?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-021",
+    "code": "SAP_COM_0106",
+    "entity": "A_OutbDeliveryHeader",
+    "desc": "出库交货",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/A_OutbDeliveryHeader?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-022",
+    "code": "SAP_COM_0108",
+    "entity": "A_MaterialDocumentHeader",
+    "desc": "物料凭证",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentHeader?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-023",
+    "code": "SAP_COM_0164",
+    "entity": "A_MatlStkInAcctMod",
+    "desc": "库存查询",
+    "status": "OK",
+    "httpStatus": 200,
+    "records": 1,
+    "url": "/sap/opu/odata/sap/API_MATERIAL_STOCK_SRV/A_MatlStkInAcctMod?$format=json&$top=1"
+  },
+  {
+    "us": "US-API-024",
+    "code": "SAP_COM_0112",
+    "entity": "A_ReservationDocument",
+    "desc": "库存预留",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-025",
+    "code": "SAP_COM_0107",
+    "entity": "A_PhysInventoryDocHeader",
+    "desc": "盘点数据",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-026",
+    "code": "SAP_COM_0943",
+    "entity": "CostCenter",
+    "desc": "成本中心",
+    "status": "OK",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-027",
+    "code": "SAP_COM_0129",
+    "entity": "A_ActivityType",
+    "desc": "作业类型",
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"/IWCOR/CX_OD_URI_NOT_MATCHING/005056A509B11EE38DCB75E2A43B5206\",\"message\":\"Resourc"
+  },
+  {
+    "us": "US-API-028",
+    "code": "SAP_COM_0008",
+    "entity": "A_BPContact",
+    "desc": "附件管理(IAM)",
+    "v2": true,
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  },
+  {
+    "us": "US-API-029",
+    "code": "SAP_COM_0066",
+    "entity": "A_User",
+    "desc": "用户角色(IAM)",
+    "v2": true,
+    "status": "EMPTY",
+    "httpStatus": 404,
+    "records": 0,
+    "error": "{\"error\":{\"code\":\"005056A509B11EE1B9A8FEC11C21D78E\",\"message\":{\"lang\":\"en\",\"value\":\"Resource not fou"
+  }
+]

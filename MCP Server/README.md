@@ -18,6 +18,7 @@ MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-o
 
 | 文档 | 描述 | 面向 |
 |---|---|---|
+| [deployment-guide.md](./docs/deployment-guide.md) | 生产部署指南 | 运维 |
 | [Specs](./.specify/specs/) | 4 个技术规格 (Core/Business/Master/Plugin) | 开发 |
 | [tasks.md](./docs/tasks.md) | 任务计划与完成追踪 | 开发 |
 | [parameter-validation-rules.md](./docs/parameter-validation-rules.md) | 每个工具的参数校验规则 | 开发 |

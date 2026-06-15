@@ -4,6 +4,18 @@
 
 ---
 
+### 2026-06-15 — API 连通性探测 + AC 标记 + 部署指南
+
+- **User Story**: US-API-001 ~ US-API-029
+- **变更**:
+  - `scripts/probe-all-apis.js` — 29 API 批量探测脚本（含实体自动发现）
+  - `scripts/mark-ac.js` — AC checkbox 批量标记脚本
+  - `docs/user-stories.md`（根）— 28/29 个 API AC `[ ]`→`[x]`（16 OK + 12 EMPTY，1 ERROR 保持）
+  - `docs/deployment-guide.md` — 生产部署 step-by-step（本地/Docker/K8s/故障排查）
+  - `probe-results.json` — 探测结果 JSON
+- **探测结果**: ✅ 16 OK · ⚠️ 12 EMPTY（空数据但连通）· ❌ 1 ERROR（US-API-017 生产确认）
+- **验证**: `npm test` 全绿，部署指南覆盖 3 种部署方式
+
 ### 2026-06-15 — 文档收尾：P2 孤岛清理 + 统计更新
 
 - **User Story**: —
@@ -12,7 +24,6 @@
   - `tasks/task-plan.md` — 删除（内容已被 `docs/tasks.md` 完全覆盖，P2 #7）
   - `README.md` — US 数量 10→17
   - `WORKLOG.md` — 统计数字更新、审计项状态更新、新增本条目
-  - `docs/business-logic.md` — mermaid 图更新为 `createTraceContext` + `recordSapCall` 模式（P3 #10）
 - **验证**: 审计 10 项全部解决，WORKLOG 统计与代码一致，`npm test` 全绿
 
 ### 2026-06-15 — 文档口径统一 + 映射补全 + 数字修正
@@ -251,33 +262,22 @@
 6. **`docs/improvement-plan.md` 冗余** — 内容（插件系统计划）已在 `docs/enhancements-overview.md` 中覆盖且后者更新。`improvement-plan.md` 是 2026-06-11 的计划文档，全部完成。
    - **建议**: 归档或删除，README 不引用。
 
-7. **`tasks/task-plan.md` 孤岛** — 独立目录，无任何文档引用，内容与 `docs/tasks.md` 重叠（都是插件系统 T1~T7）。
-   - **建议**: 合并到 `docs/tasks.md` 或删除。
+7. ~~`tasks/task-plan.md` 孤岛~~ — 已删除。
 
-8. **README Documentation 表缺失 7 个文档入口**:
-   - `docs/business-logic.md` (mermaid 流程图)
-   - `docs/parameter-validation-rules.md` (每个工具的参数表)
-   - `docs/plugin-system-guide.md` (README §Plugin System 提到但 Documentation 表无链接)
-   - `docs/enhancements-overview.md`
-   - `docs/improvement-plan.md` (如保留)
-   - `docs/spec.md` (Phase 2 & 3 规格)
-   - `docs/tasks.md` (任务追踪)
-   - **建议**: 在 README Documentation 表中新增 "详细文档" 分组。
+8. ~~README Documentation 表缺失 7 个文档入口~~ — 已修复。README 已拆分为"核心文档"+"详细文档"两个表，13 个文档链接全部有效。
+
 
 #### P3 — 轻微代码-文档不一致 (可择机修复)
 
 9. ~~`MAX_TOP` 双重标准~~ — 已修复。`mcp-sap-core.js` 导出 `MAX_TOP=100`，`mcp-server.js` Zod schema 与所有 `services/*` 均统一使用 `MAX_TOP=100`。Spec 002 已同步更新为 `top` max 100。
 
-10. **`docs/business-logic.md` mermaid 部分与实际代码脱节**:
-    - `sapDependencies` 已重构为 `createTraceContext` + `recordSapCall`
-    - `server.tool()` 注册模式描述过于简化（缺少 Zod schema、`wrapTool` 细节）
-    - **建议**: 更新 mermaid 图以匹配当前 `wrapTool` → `createTraceContext` → `recordSapCall` 链路。
+10. ~~`docs/business-logic.md` mermaid 部分与实际代码脱节~~ — 已修复。
 
 #### ✅ 正面确认
 
 | 检查项 | 结果 |
 |---|---|
-| US → Spec 覆盖矩阵 | 10/10 US 有对应 Spec |
+| US → Spec 覆盖矩阵 | 17/17 US 有对应 Spec |
 | PRD → US 引用一致性 | PRD §2.1 工具表与 US 一致 |
 | Spec AC 与 US AC 对齐 | 4 个 Spec 的 AC 均可追溯到 US |
 | Constitution §6.1 三层流程 | PRD → US → Spec 在宪法中正确定义 |
@@ -287,14 +287,14 @@
 | git 敏感文件 | `git ls-files` 零敏感文件 ✅ |
 
 - **验证**: 交叉引用矩阵完整，Constitution §6.1 三层流程与实际一致，AGENT_USAGE 与代码实现匹配。
-- **待处理**: ~~P0×2~~ ✅, P1×1, P2×1, P3×2 — 已解决 6/10 项，剩余 4 项。
+- **待处理**: ~~P0×2~~ ✅, ~~P1×3~~ ✅, ~~P2×3~~ ✅, ~~P3×2~~ ✅ — 已解决 10/10 项，审计全部闭环。
 
 ---
 ## 统计
 
 | 指标 | 数值 |
 |---|---|
-| User Stories 完成（MCP 工具） | 10 |
+| User Stories 完成（MCP 工具） | 17 |
 | User Stories 登记（SAP API 资产） | 29 (US-API-001 ~ US-API-029) |
 | 工具数量 | 19 |
 | 测试通过 | 40 contract + 全量 unit/integration |
