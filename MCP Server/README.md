@@ -1,5 +1,7 @@
 # SAP S/4HANA MCP Server
 
+> **Version 0.5.0** — 34 MCP tools, 29 US-API modules, HTTP/SSE transport
+
 MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-oriented, read-only tools.
 
 ## Documentation
@@ -9,7 +11,7 @@ MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-o
 | 文档 | 描述 | 面向 |
 |---|---|---|
 | [PRD.md](./docs/PRD.md) | 产品需求文档 | 所有人 |
-| [user-stories.md](./docs/user-stories.md) | 21 个 User Story + 验收标准 | 产品/开发 |
+| [user-stories.md](../docs/user-stories.md) | 29 个 US-API User Story + 验收标准 | 产品/开发 |
 | [constitution.md](./.specify/memory/constitution.md) | 项目宪法 | 开发 |
 | [WORKLOG.md](./WORKLOG.md) | 工作日志 | 所有人 |
 | [AGENT_USAGE.md](./AGENT_USAGE.md) | Agent 调用规则与安全边界 | AI Agent |
@@ -97,8 +99,9 @@ npm start
 ```
 
 The server exposes:
-- `POST /mcp` — MCP Streamable HTTP endpoint
-- `GET /mcp` — MCP SSE stream
+- `POST /mcp` — MCP Streamable HTTP endpoint (JSON-RPC requests)
+- `GET /mcp` — MCP SSE stream (server-to-client notifications)
+- `DELETE /mcp` — Terminate session (requires `Mcp-Session-Id` header)
 - `GET /` — Health/info endpoint
 
 MCP clients can connect via HTTP:
@@ -209,7 +212,14 @@ Error responses keep the same top-level schema:
 
 1. Call `authenticate` with `api_key`.
 2. Call `health_check` if the Agent needs to verify configuration or SAP connectivity.
-3. Use business tools such as `get_sales_order_status`, `get_purchase_order`, `get_purchase_requisition`, `get_schedule_agreement`, `get_sales_contract`, `get_material_reservation`, `get_product`, or `get_material_stock` for normal read-only queries.
+3. Use business tools for normal read-only queries:
+   - **Sales**: `get_sales_order_status`, `get_sales_quotation`, `get_sales_contract`, `get_sales_pricing_condition`
+   - **Procurement**: `get_purchase_order`, `get_purchase_requisition`, `get_purchase_rfq`, `get_schedule_agreement`, `get_service_entry_sheet`, `get_supplier_evaluation`
+   - **Master Data**: `get_product`, `get_business_partner`, `get_material_stock`, `get_bom`, `get_cost_center`, `get_activity_type`
+   - **Production**: `get_production_data`, `get_production_order_confirmation`, `get_routing`, `get_inspection_data`
+   - **Logistics**: `get_material_reservation`, `get_physical_inventory`
+   - **Finance**: `get_supplier_invoice`, `get_cost_center`
+   - **System**: `get_entity_schema`, `get_attachment`, `get_iam_user_role`, `list_sap_scenarios`
 4. Use `trace_sales_order` only when downstream lifecycle data is needed.
 5. Use `get_entity_schema` before building complex filters against unfamiliar OData entities.
 6. Use `query_sap_scenario` only for debug/admin exploration and only when explicitly enabled.
@@ -217,19 +227,26 @@ Error responses keep the same top-level schema:
 
 ## Architecture
 
-- `mcp-server.js`: MCP protocol adapter and tool registration.
-- `runtime-context.js`: creates per-runtime auth and SAP contexts. This is the seam for future HTTP/SSE per-session state.
-- `mcp-auth.js`: authentication context and API key validation.
-- `mcp-sap-core.js`: SAP OData client, scenario parsing, OData helpers.
-- `services/`: business use cases independent from MCP protocol.
-- `lib/errors.js`: stable error codes and error normalization.
-- `lib/mcp-response.js`: stable MCP JSON response envelope.
+- `mcp-server.js`: MCP protocol adapter, tool registration, stdio + HTTP/SSE transport.
+- `runtime-context.js`: creates per-runtime auth and SAP contexts. Seam for future per-session state.
+- `mcp-auth.js`: authentication context, API key validation, multi-key support, lockout.
+- `mcp-sap-core.js`: SAP OData client, scenario parsing, OData helpers, circuit breaker.
+- `services/`: 27 business use case modules independent from MCP protocol.
+- `lib/errors.js`: stable error codes (17 codes) and error normalization.
+- `lib/mcp-response.js`: stable MCP JSON response envelope (`schemaVersion 1.0`).
+- `lib/roles.js`: role model (readonly / debug / admin) with permission checks.
+- `lib/rate-limiter.js`: concurrency limiter (5) + token bucket (60/min) + circuit breaker.
+- `lib/observability.js`: structured JSON logging, Trace ID, MetricsStore (p50/p95).
+- `lib/sap-cache.js`: in-memory SAP response cache with configurable TTL.
+- `lib/auto-pagination.js`: automatic OData `$skip`/`$top` pagination with record cap.
+- `lib/metrics-server.js`: optional Prometheus metrics HTTP sidecar (`/metrics`, `/healthz`).
 - `lib/plugin-system.js`: plugin interface definitions and validation.
 - `lib/plugin-loader.js`: plugin loading and lifecycle management.
-- `lib/dynamic-loader.js`: runtime plugin loading/unloading.
+- `lib/dynamic-loader.js`: runtime plugin loading/unloading with path whitelist.
+- `config/trace-config.json`: configurable trace steps for `trace_sales_order`.
 - `docs/`: documentation including parameter validation rules and business logic.
 - `examples/`: plugin examples and development templates.
-- `tests/run-tests.js`: local no-network MVP regression tests.
+- `tests/run-tests.js`: local no-network MVP regression tests (39 modules).
 
 ## Validation
 
@@ -239,7 +256,7 @@ node --check mcp-server.js
 node -e "JSON.parse(require('fs').readFileSync('mcp.json','utf8')); console.log('mcp.json ok')"
 ```
 
-`npm test` does not call SAP. It validates response schema, context isolation, scenario key generation, and business service URL generation with fake SAP clients.
+`npm test` runs 39 test modules (26 unit + 13 service tests) without calling SAP. It validates response schema, context isolation, scenario key generation, business service URL generation, parameter validation, and HTTP transport with fake SAP clients.
 
 ## Plugin System
 
