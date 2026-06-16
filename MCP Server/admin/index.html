@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ES-MCP-Server Admin</title>
+    <link rel="stylesheet" href="/admin/css/style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <h1>ES-MCP-Server</h1>
+            <p class="subtitle">Admin Dashboard</p>
+            <form id="login-form">
+                <input type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+                <button type="submit">Login</button>
+                <p id="login-error" class="error hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-screen" class="screen hidden">
+        <header>
+            <h1>ES-MCP-Server Admin</h1>
+            <div class="header-actions">
+                <span id="version-badge" class="badge">v0.6.0</span>
+                <button id="logout-btn" class="btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <div class="layout">
+            <nav id="sidebar">
+                <ul>
+                    <li><a href="#dashboard" class="nav-link active" data-page="dashboard">Dashboard</a></li>
+                    <li><a href="#keys" class="nav-link" data-page="keys">API Keys</a></li>
+                    <li><a href="#plugins" class="nav-link" data-page="plugins">Plugins</a></li>
+                    <li><a href="#sessions" class="nav-link" data-page="sessions">Sessions</a></li>
+                    <li><a href="#tools" class="nav-link" data-page="tools">Tools</a></li>
+                    <li><a href="#config" class="nav-link" data-page="config">Config</a></li>
+                    <li><a href="#health" class="nav-link" data-page="health">Health</a></li>
+                </ul>
+            </nav>
+
+            <main id="content">
+                <!-- Pages will be rendered here -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Disabled Screen -->
+    <div id="disabled-screen" class="screen hidden">
+        <div class="login-container">
+            <h1>ES-MCP-Server</h1>
+            <p class="subtitle">Admin Dashboard</p>
+            <p class="disabled-message">Admin dashboard is disabled.<br>Set MCP_ADMIN_PASSWORD to enable.</p>
+        </div>
+    </div>
+
+    <script src="/admin/js/api.js"></script>
+    <script src="/admin/js/pages/dashboard.js"></script>
+    <script src="/admin/js/pages/keys.js"></script>
+    <script src="/admin/js/pages/plugins.js"></script>
+    <script src="/admin/js/pages/sessions.js"></script>
+    <script src="/admin/js/pages/tools.js"></script>
+    <script src="/admin/js/pages/config.js"></script>
+    <script src="/admin/js/pages/health.js"></script>
+    <script src="/admin/js/app.js"></script>
+</body>
+</html>

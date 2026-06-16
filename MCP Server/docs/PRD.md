@@ -1,6 +1,6 @@
 # PRD — SAP S/4HANA MCP Server
 
-> 版本: 0.4.0 | 更新: 2026-06-15 | 状态: v0.4 完成 → v0.5 规划中
+> 版本: 0.6.0 | 更新: 2026-06-15 | 状态: v0.5 完成 → v0.6 开发中
 
 ## 1. 产品概述
 
@@ -90,7 +90,6 @@
 
 - SAP 写入/审批/改单 ❌
 - 多租户支持 ❌
-- Web UI 仪表盘 ❌
 - OAuth2/SAML 认证 ❌
 - 生产级分布式缓存 / Redis ❌
 
@@ -101,8 +100,9 @@
 | 1 | MCP stdio 传输 | 最低延迟，Agent 侧零配置 |
 | 2 | Zod 参数校验 | MCP SDK 原生支持 |
 | 3 | 纯 Node.js (无 TS) | 降低构建复杂度 |
-| 4 | express 仅保留 (未用于 MCP) | 根 server.js 是历史遗留 Web UI |
+| 4 | express 复用 | metrics-server + HTTP transport + admin dashboard |
 | 5 | 插件系统 | 允许无重启扩展工具 |
+| 6 | Admin SPA 内嵌 | 零构建依赖，单进程部署，原生 HTML/CSS/JS |
 
 ## 6. 路线图
 
@@ -113,8 +113,19 @@
 - [x] Prometheus metrics 端点（`lib/metrics-server.js`, /metrics + /healthz）
 - [x] 补齐高优先级业务 API：采购申请（US-API-004）、采购框架协议（US-API-005）、销售合同（US-API-011）、库存预留（US-API-024）
 
-### v0.5 (下一个)
+### v0.5 (完成)
 - [x] HTTP/SSE 传输 (MCP Streamable) — 支持多会话并发 HTTP 访问
 - [ ] OAuth2 客户端凭据流
 - [ ] 租户级隔离
 - [x] 覆盖全部 29 个 US-API 模块（已完成 13 个新增：US-API-007/008/009/012/014/016/017/019/020/025/027/028/029）
+
+### v0.6 (当前)
+- [ ] Admin Dashboard — 内嵌式管理后台 SPA
+  - [ ] 独立密码认证 (`MCP_ADMIN_PASSWORD`)
+  - [ ] Dashboard：请求统计、性能指标、缓存命中率、断路器状态
+  - [ ] API Key 管理：脱敏列表、角色、锁定状态
+  - [ ] 插件管理：已加载列表、卸载操作
+  - [ ] 会话监控：活跃 HTTP 会话、终止操作
+  - [ ] 工具列表：34+ 注册工具、参数 schema
+  - [ ] 系统配置：环境变量（脱敏）、运行时信息
+  - [ ] 健康检查：SAP 连接、断路器、缓存、自动分页状态

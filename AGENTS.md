@@ -10,6 +10,7 @@
   - `@modelcontextprotocol/sdk` — MCP 协议 SDK
   - `express` — HTTP 服务端
   - `cors` — 跨域支持
+  - `cookie-parser` — Cookie 解析（管理后台会话）
   - `zod` — 参数校验
   - `prom-client` — Prometheus 指标
 
@@ -40,7 +41,7 @@
 │   │   └── parameter-validation-rules.md
 │   ├── .specify/                  # Specify 规格系统
 │   │   ├── memory/constitution.md # 项目宪法
-│   │   └── specs/001~005/         # 5 个技术规格
+│   │   └── specs/001~006/         # 6 个技术规格
 │   ├── lib/                       # 横切关注点库
 │   │   ├── errors.js              # 错误码定义
 │   │   ├── mcp-response.js        # MCP 响应封装
@@ -52,7 +53,9 @@
 │   │   ├── metrics-server.js      # Prometheus 指标端点
 │   │   ├── dynamic-loader.js      # 动态加载器
 │   │   ├── plugin-loader.js       # 插件加载器
-│   │   └── plugin-system.js       # 插件系统核心
+│   │   ├── plugin-system.js       # 插件系统核心
+│   │   ├── admin-auth.js          # 管理后台认证
+│   │   └── admin-api.js           # 管理后台 REST API
 │   ├── services/                  # 业务工具服务（27 个）
 │   │   ├── sales-order-status.js
 │   │   ├── sales-order-trace.js
@@ -85,7 +88,7 @@
 │   │   └── trace-config.json      # 追踪步骤配置
 │   ├── tests/                     # 测试目录
 │   │   ├── run-tests.js           # 测试运行器
-│   │   ├── unit/                  # 单元测试（39 个模块）
+│   │   ├── unit/                  # 单元测试（41 个模块）
 │   │   ├── integration/           # 集成测试
 │   │   └── contract/              # 契约测试
 │   ├── scripts/                   # 工具脚本
@@ -93,6 +96,13 @@
 │   │   └── mark-ac.js             # AC 标记
 │   └── examples/                  # 示例
 │       └── sample-plugin.js
+│   ├── admin/                     # 管理后台 SPA
+│   │   ├── index.html             # SPA 入口
+│   │   ├── css/style.css          # 样式
+│   │   └── js/                    # 前端逻辑
+│   │       ├── api.js             # API 调用层
+│   │       ├── app.js             # 主应用（路由/页面切换）
+│   │       └── pages/             # 7 个页面模块
 ├── docs/                          # 根级文档
 │   └── user-stories.md            # SAP API 资产清单（29 个 US-API）
 ├── public/                        # 静态文件
@@ -109,6 +119,8 @@
 | `MCP Server/lib/roles.js` | 角色模型（readonly/debug/admin） |
 | `MCP Server/lib/rate-limiter.js` | 并发限流 + 令牌桶 |
 | `MCP Server/lib/observability.js` | Trace ID、MetricsStore、结构化日志 |
+| `MCP Server/lib/admin-auth.js` | 管理后台认证（密码/会话/速率限制） |
+| `MCP Server/lib/admin-api.js` | 管理后台 REST API（7 个端点组） |
 
 ## 运行与预览
 - **启动**：`cd "MCP Server" && npm start`（stdio 模式）

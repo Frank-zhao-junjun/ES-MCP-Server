@@ -4,6 +4,30 @@
 
 ---
 
+### 2026-06-15 — v0.5: Admin Dashboard（目标 E）
+
+- **User Story**: 新增管理后台功能
+- **类型**: Feature — PRD v0.5 路线图目标 E
+- **变更**:
+  - `lib/admin-auth.js` (**新建**) — 管理后台认证模块（密码验证、会话管理、速率限制）
+  - `lib/admin-api.js` (**新建**) — 管理后台 REST API 路由（7 个端点组）
+  - `admin/index.html` (**新建**) — SPA 入口页面
+  - `admin/css/style.css` (**新建**) — 管理后台样式
+  - `admin/js/api.js` (**新建**) — API 调用层
+  - `admin/js/app.js` (**新建**) — 主应用逻辑（路由、页面切换）
+  - `admin/js/pages/*.js` (**新建**) — 7 个页面模块（dashboard/keys/plugins/sessions/tools/config/health）
+  - `mcp-server.js` — 集成管理后台（Express 中间件、静态文件服务）
+  - `package.json` — 新增 `cookie-parser` 依赖
+  - `tests/unit/admin-auth.test.js` (**新建**) — 认证模块单元测试（14 个测试）
+  - `tests/unit/admin-api.test.js` (**新建**) — API 路由单元测试（10 个测试）
+  - `.specify/specs/006-admin-dashboard/spec.md` (**新建**) — 管理后台技术规格
+  - `docs/PRD.md` — 新增目标 E 描述
+  - `README.md` — 新增 Admin Dashboard 使用说明
+- **新增配置**: `MCP_ADMIN_PASSWORD`, `MCP_ADMIN_SESSION_TTL`
+- **验证**: `npm test` ✅ 全绿（41 模块，170ms）
+
+---
+
 ### 2026-06-15 — v0.5: HTTP/SSE 传输（目标 A）
 
 - **User Story**: US-001（MCP stdio 传输扩展）

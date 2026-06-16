@@ -1,6 +1,6 @@
 # SAP S/4HANA MCP Server
 
-> **Version 0.5.0** — 34 MCP tools, 29 US-API modules, HTTP/SSE transport
+> **Version 0.5.0** — 34 MCP tools, 29 US-API modules, HTTP/SSE transport, Admin Dashboard
 
 MCP Server for AI Agents to read SAP S/4HANA Cloud OData APIs through business-oriented, read-only tools.
 
@@ -116,6 +116,34 @@ MCP clients can connect via HTTP:
 }
 ```
 
+### Admin Dashboard (v0.5)
+
+A web-based admin dashboard for monitoring and managing the MCP Server:
+
+```powershell
+$env:MCP_ADMIN_PASSWORD="your-secure-password"
+$env:MCP_ENABLE_HTTP_TRANSPORT="true"
+$env:MCP_PORT="3000"
+npm start
+```
+
+Access the dashboard at `http://localhost:3000/admin`
+
+**Features:**
+- **Dashboard** — Request metrics, success rate, latency (p50/p95), circuit breaker status
+- **API Keys** — View configured keys (masked), roles, lockout status
+- **Plugins** — List loaded plugins, load/unload operations
+- **Sessions** — Active HTTP sessions with creation time
+- **Tools** — All 34 registered tools with descriptions and parameter schemas
+- **Config** — Environment variables (sensitive values masked), runtime parameters
+- **Health** — SAP connection status, circuit breaker state, cache stats
+
+**Security:**
+- Independent password authentication (`MCP_ADMIN_PASSWORD`)
+- Session-based auth with configurable TTL (`MCP_ADMIN_SESSION_TTL`)
+- Rate limiting on login attempts (10 attempts, 5-minute lockout)
+- Sensitive values masked in API responses
+
 ## Configuration
 
 Required environment variables:
@@ -138,6 +166,8 @@ Required environment variables:
 | `MCP_ENABLE_HTTP_TRANSPORT` | No | Enable HTTP/SSE transport. Default `false` (stdio mode). Set to `true` for multi-session HTTP. |
 | `MCP_PORT` | No | HTTP server port when HTTP transport is enabled. Default `3000`. |
 | `MCP_BIND_ADDRESS` | No | HTTP server bind address. Default `127.0.0.1`. Use `0.0.0.0` for Docker/K8s. |
+| `MCP_ADMIN_PASSWORD` | No | Admin dashboard password. If not set, admin dashboard is disabled. |
+| `MCP_ADMIN_SESSION_TTL` | No | Admin session TTL in milliseconds. Default `3600000` (1 hour). |
 
 Example `mcp.json`:
 

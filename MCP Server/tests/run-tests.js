@@ -42,6 +42,8 @@ const physicalInventory = require('./unit/physical-inventory.test');
 const activityType = require('./unit/activity-type.test');
 const attachment = require('./unit/attachment.test');
 const iamUserRole = require('./unit/iam-user-role.test');
+const adminAuth = require('./unit/admin-auth.test');
+const adminApi = require('./unit/admin-api.test');
 const sapIntegration = require('./integration/sap-integration.test');
 
 async function main() {

@@ -5,6 +5,7 @@ const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const { z } = require('zod');
 const {
     sapFetch,
@@ -57,6 +58,10 @@ const { getIamUserRole } = require('./services/iam-user-role');
 
 // Plugin system
 const DynamicLoader = require('./lib/dynamic-loader');
+
+// Admin Dashboard
+const { createAdminRouter } = require('./lib/admin-api');
+const { adminAuth } = require('./lib/admin-auth');
 
 const server = new McpServer({
     name: 'sap-s4-mcp',
@@ -1704,6 +1709,7 @@ async function main() {
         // Setup HTTP/SSE Transport
         expressApp = express();
         expressApp.use(cors());
+        expressApp.use(cookieParser());
         expressApp.use(express.json({ limit: '10mb' }));
         expressApp.use(express.urlencoded({ extended: true }));
 
@@ -1711,11 +1717,23 @@ async function main() {
         expressApp.get('/', (req, res) => {
             res.json({
                 name: 'SAP S/4HANA MCP Server',
-                version: '0.4.0',
+                version: '0.6.0',
                 status: 'running',
                 timestamp: new Date().toISOString(),
             });
         });
+
+        // Mount Admin Dashboard
+        const adminRouter = createAdminRouter({
+            metrics,
+            authContext: runtimeContext.auth,
+            dynamicLoader,
+            sapResponseCache,
+            circuitBreaker: null, // TODO: expose circuit breaker state
+            httpSessions: mcpTransports,
+            registeredTools: [], // TODO: populate from server.listTools()
+        });
+        expressApp.use('/admin', adminRouter);
 
         const httpTransport = new StreamableHTTPServerTransport({
             sessionIdGenerator: undefined, // Stateless mode
@@ -1742,6 +1760,9 @@ async function main() {
             httpServer.listen(PORT, BIND_ADDRESS, () => {
                 console.error(`\n🌐 HTTP Transport 已启动: http://${BIND_ADDRESS}:${PORT}`);
                 console.error(`📋 MCP 协议端点: http://${BIND_ADDRESS}:${PORT}/mcp`);
+                if (adminAuth.isEnabled()) {
+                    console.error(`🔧 Admin Dashboard: http://${BIND_ADDRESS}:${PORT}/admin`);
+                }
                 resolve();
             });
         });
