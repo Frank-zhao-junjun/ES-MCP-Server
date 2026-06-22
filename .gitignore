@@ -16,3 +16,6 @@ _mcp_stderr.txt
 Thumbs.db
 *.swp
 .claude/
+
+# Preview files
+.preview
