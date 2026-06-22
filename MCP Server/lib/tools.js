@@ -363,6 +363,256 @@ async function authenticate({ apiKey }) {
   return toMcpResult({ success: true, message: 'API key valid' });
 }
 
+// =============================================================================
+// Phase 3 — Blocked / arrangement-dependent tools
+// =============================================================================
+
+/**
+ * Task 3.1 — Purchase Requisition (SAP_COM_0102, V4)
+ */
+async function getPurchaseRequisition(args = {}) {
+  const { purchaseRequisition, includeItems = false, filter, top = 10 } = args;
+  const base = '/sap/opu/odata4/sap/api_purchaserequisition/srvd_a2x/sap/purchaserequisition/0001';
+  const expandParts = [];
+  if (includeItems) expandParts.push('to_PurchaseReqnItem');
+  const $expand = expandParts.length ? expandParts.join(',') : undefined;
+
+  let url;
+  if (purchaseRequisition) {
+    url = singleKeyUrl(`${base}/PurchaseRequisition`, 'PurchaseRequisition', purchaseRequisition, {
+      $format: 'json', $expand, sapClient: false,
+    });
+  } else {
+    url = makeUrl(`${base}/PurchaseRequisition`, { $filter: filter, $top: top, $format: 'json', $expand, sapClient: false });
+  }
+
+  const resp = await sapGet(url);
+  if (!resp.ok) {
+    return toMcpError(JSON.stringify({
+      ...resp.error,
+      hint: 'This endpoint requires SAP_COM_0102 Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  return toMcpResult({ results: extractResults(resp.data) });
+}
+
+/**
+ * Task 3.2 — Scheduling Agreement (SAP_COM_0103, V4)
+ */
+async function getScheduleAgreement(args = {}) {
+  const { schedulingAgreement, includeItems = false, filter, top = 10 } = args;
+  const base = '/sap/opu/odata4/sap/api_schedagreement/srvd_a2x/sap/schedagreement/0001';
+  const expandParts = [];
+  if (includeItems) expandParts.push('to_SchedgAgrmtItem');
+  const $expand = expandParts.length ? expandParts.join(',') : undefined;
+
+  let url;
+  if (schedulingAgreement) {
+    url = singleKeyUrl(`${base}/A_SchedgAgrmt`, 'SchedulingAgreement', schedulingAgreement, {
+      $format: 'json', $expand, sapClient: false,
+    });
+  } else {
+    url = makeUrl(`${base}/A_SchedgAgrmt`, { $filter: filter, $top: top, $format: 'json', $expand, sapClient: false });
+  }
+
+  const resp = await sapGet(url);
+  if (!resp.ok) {
+    return toMcpError(JSON.stringify({
+      ...resp.error,
+      hint: 'This endpoint requires SAP_COM_0103 Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  return toMcpResult({ results: extractResults(resp.data) });
+}
+
+/**
+ * Task 3.3 — Sales Contract (SAP_COM_0119, V4)
+ */
+async function getSalesContract(args = {}) {
+  const { salesContract, includeItems = false, filter, top = 10 } = args;
+  const base = '/sap/opu/odata4/sap/api_salescontract/srvd_a2x/sap/salescontract/0001';
+  const expandParts = [];
+  if (includeItems) expandParts.push('to_SalesContractItem');
+  const $expand = expandParts.length ? expandParts.join(',') : undefined;
+
+  let url;
+  if (salesContract) {
+    url = singleKeyUrl(`${base}/SalesContract`, 'SalesContract', salesContract, {
+      $format: 'json', $expand, sapClient: false,
+    });
+  } else {
+    url = makeUrl(`${base}/SalesContract`, { $filter: filter, $top: top, $format: 'json', $expand, sapClient: false });
+  }
+
+  const resp = await sapGet(url);
+  if (!resp.ok) {
+    return toMcpError(JSON.stringify({
+      ...resp.error,
+      hint: 'This endpoint requires SAP_COM_0119 Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  return toMcpResult({ results: extractResults(resp.data) });
+}
+
+/**
+ * Task 3.4 — Bill of Material (API_BILL_OF_MATERIAL_SRV, V2)
+ */
+async function getBom(args = {}) {
+  const { billOfMaterial, material, plant, filter, top = 10 } = args;
+  const base = '/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV;v=0002';
+
+  let url;
+  if (billOfMaterial) {
+    url = singleKeyUrl(`${base}/A_BillOfMaterial`, 'BillOfMaterial', billOfMaterial, { $format: 'json' });
+  } else {
+    let $filter = filter;
+    const parts = [];
+    if (material) parts.push(`Material eq '${material}'`);
+    if (plant) parts.push(`Plant eq '${plant}'`);
+    if (parts.length && !$filter) $filter = parts.join(' and ');
+    url = makeUrl(`${base}/A_BillOfMaterialItem`, { $filter, $top: top, $format: 'json' });
+  }
+
+  const resp = await sapGet(url);
+  if (!resp.ok) {
+    return toMcpError(JSON.stringify({
+      ...resp.error,
+      hint: 'This endpoint requires API_BILL_OF_MATERIAL_SRV Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  return toMcpResult({ results: extractResults(resp.data) });
+}
+
+/**
+ * Task 3.5 — Material Reservation (V4)
+ */
+async function getMaterialReservation(args = {}) {
+  const { reservation, material, plant, filter, top = 10 } = args;
+  const base = '/sap/opu/odata4/sap/api_reservationdocument/srvd_a2x/sap/reservationdocument/0001';
+
+  let url;
+  if (reservation) {
+    url = singleKeyUrl(`${base}/ReservationDocumentItem`, 'ReservationDocument', reservation, {
+      $format: 'json', sapClient: false,
+    });
+  } else {
+    let $filter = filter;
+    const parts = [];
+    if (material) parts.push(`Material eq '${material}'`);
+    if (plant) parts.push(`Plant eq '${plant}'`);
+    if (parts.length && !$filter) $filter = parts.join(' and ');
+    url = makeUrl(`${base}/ReservationDocumentItem`, { $filter, $top: top, $format: 'json', sapClient: false });
+  }
+
+  const resp = await sapGet(url);
+  if (!resp.ok) {
+    return toMcpError(JSON.stringify({
+      ...resp.error,
+      hint: 'This endpoint requires Reservation Document V4 Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  return toMcpResult({ results: extractResults(resp.data) });
+}
+
+/**
+ * Task 3.6 — Supplier Invoice V4 (SAP_COM_0054)
+ */
+async function getSupplierInvoiceV4(args = {}) {
+  const { invoice, fiscalYear, includeLines = false, includeTax = false, filter, top = 10 } = args;
+  const base = '/sap/opu/odata4/sap/api_supplierinvoice/srvd_a2x/sap/supplierinvoice/0001';
+
+  const result = {};
+
+  // Header
+  let headerUrl;
+  if (invoice && fiscalYear) {
+    headerUrl = `${base}/SupplierInvoice(SupplierInvoice='${invoice}',FiscalYear='${fiscalYear}')?$format=json`;
+  } else {
+    headerUrl = makeUrl(`${base}/SupplierInvoice`, { $filter: filter, $top: top, $format: 'json', sapClient: false });
+  }
+
+  const headerResp = await sapGet(headerUrl);
+  if (!headerResp.ok) {
+    return toMcpError(JSON.stringify({
+      ...headerResp.error,
+      hint: 'This endpoint requires SAP_COM_0054 Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  result.header = extractResults(headerResp.data);
+
+  // Lines
+  if (includeLines && invoice && fiscalYear) {
+    const lineUrl = makeUrl(`${base}/SuplrInvcItemPurOrdRef`, {
+      $filter: `SupplierInvoice eq '${invoice}' and FiscalYear eq '${fiscalYear}'`,
+      $format: 'json', sapClient: false,
+    });
+    const lineResp = await sapGet(lineUrl);
+    result.lines = lineResp.ok ? extractResults(lineResp.data) : lineResp.error;
+  }
+
+  // Tax
+  if (includeTax && invoice && fiscalYear) {
+    const taxUrl = makeUrl(`${base}/SupplierInvoiceTax`, {
+      $filter: `SupplierInvoice eq '${invoice}' and FiscalYear eq '${fiscalYear}'`,
+      $format: 'json', sapClient: false,
+    });
+    const taxResp = await sapGet(taxUrl);
+    result.tax = taxResp.ok ? extractResults(taxResp.data) : taxResp.error;
+  }
+
+  return toMcpResult(result);
+}
+
+/**
+ * Task 3.7 — Master data helpers (SAP_COM_0087)
+ * Supports: plant, payment_terms, purchasing_organization, purchasing_group, company_code, storage_location
+ */
+const MASTER_DATA_MAP = {
+  plant: { path: '/sap/opu/odata4/sap/api_plant/srvd_a2x/sap/plant/0001/Plant', key: 'Plant' },
+  payment_terms: { path: '/sap/opu/odata4/sap/api_paymentterms/srvd_a2x/sap/paymentterms/0001/PaymentTerms', key: 'PaymentTerms' },
+  purchasing_organization: { path: '/sap/opu/odata4/sap/api_purchasingorganization/srvd_a2x/sap/purchasingorganization/0001/A_PurchasingOrganization', key: 'PurchasingOrganization' },
+  purchasing_group: { path: '/sap/opu/odata4/sap/api_purchasinggroup/srvd_a2x/sap/purchasinggroup/0001/A_PurchasingGroup', key: 'PurchasingGroup' },
+  company_code: { path: '/sap/opu/odata4/sap/api_companycode/srvd_a2x/sap/companycode/0001/CompanyCode', key: 'CompanyCode' },
+  storage_location: { path: '/sap/opu/odata4/sap/api_storagelocation/srvd_a2x/sap/storagelocation/0001/StorageLocation', key: 'StorageLocation' },
+};
+
+async function getMasterData(args = {}) {
+  const { type, key, filter, top = 10 } = args;
+
+  if (!type) {
+    return toMcpError(JSON.stringify({
+      error: 'MISSING_PARAMS',
+      message: 'type is required',
+      validTypes: Object.keys(MASTER_DATA_MAP),
+    }));
+  }
+
+  const meta = MASTER_DATA_MAP[type];
+  if (!meta) {
+    return toMcpError(JSON.stringify({
+      error: 'INVALID_TYPE',
+      message: `Unknown master data type: ${type}`,
+      validTypes: Object.keys(MASTER_DATA_MAP),
+    }));
+  }
+
+  let url;
+  if (key) {
+    url = singleKeyUrl(meta.path, meta.key, key, { $format: 'json', sapClient: false });
+  } else {
+    url = makeUrl(meta.path, { $filter: filter, $top: top, $format: 'json', sapClient: false });
+  }
+
+  const resp = await sapGet(url);
+  if (!resp.ok) {
+    return toMcpError(JSON.stringify({
+      ...resp.error,
+      hint: 'This endpoint requires SAP_COM_0087 Communication Arrangement. Ask Basis to open it.',
+    }));
+  }
+  return toMcpResult({ type, results: extractResults(resp.data) });
+}
+
 module.exports = {
   healthCheck,
   getProduct,
@@ -377,4 +627,11 @@ module.exports = {
   querySapScenario,
   traceSalesOrder,
   authenticate,
+  getPurchaseRequisition,
+  getScheduleAgreement,
+  getSalesContract,
+  getBom,
+  getMaterialReservation,
+  getSupplierInvoiceV4,
+  getMasterData,
 };

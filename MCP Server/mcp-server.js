@@ -24,6 +24,13 @@ const {
   querySapScenario,
   traceSalesOrder,
   authenticate,
+  getPurchaseRequisition,
+  getScheduleAgreement,
+  getSalesContract,
+  getBom,
+  getMaterialReservation,
+  getSupplierInvoiceV4,
+  getMasterData,
 } = require('./lib/tools');
 
 const VERSION = '0.1.0';
@@ -187,6 +194,96 @@ server.tool(
   authenticate
 );
 
+// ---------- Phase 3 — Blocked / arrangement-dependent tools ----------
+
+server.tool(
+  'get_purchase_requisition',
+  'Query SAP purchase requisition (V4, requires SAP_COM_0102). Returns 403 hint if arrangement not opened.',
+  {
+    purchaseRequisition: z.string().optional().describe('Purchase requisition number'),
+    includeItems: z.boolean().optional().describe('Include line items'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getPurchaseRequisition
+);
+
+server.tool(
+  'get_schedule_agreement',
+  'Query SAP scheduling agreement (V4, requires SAP_COM_0103). Returns 403 hint if arrangement not opened.',
+  {
+    schedulingAgreement: z.string().optional().describe('Scheduling agreement number'),
+    includeItems: z.boolean().optional().describe('Include line items'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getScheduleAgreement
+);
+
+server.tool(
+  'get_sales_contract',
+  'Query SAP sales contract (V4, requires SAP_COM_0119). Returns 403 hint if arrangement not opened.',
+  {
+    salesContract: z.string().optional().describe('Sales contract number'),
+    includeItems: z.boolean().optional().describe('Include line items'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getSalesContract
+);
+
+server.tool(
+  'get_bom',
+  'Query SAP bill of material (V2 API_BILL_OF_MATERIAL_SRV). Returns 403 hint if arrangement not opened.',
+  {
+    billOfMaterial: z.string().optional().describe('BOM number for single header'),
+    material: z.string().optional().describe('Material number to filter BOM items'),
+    plant: z.string().optional().describe('Plant code to filter BOM items'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getBom
+);
+
+server.tool(
+  'get_material_reservation',
+  'Query SAP material reservation (V4). Returns 403 hint if arrangement not opened.',
+  {
+    reservation: z.string().optional().describe('Reservation document number'),
+    material: z.string().optional().describe('Material number filter'),
+    plant: z.string().optional().describe('Plant code filter'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getMaterialReservation
+);
+
+server.tool(
+  'get_supplier_invoice_v4',
+  'Query SAP supplier invoice via V4 API (requires SAP_COM_0054). Returns 403 hint if arrangement not opened.',
+  {
+    invoice: z.string().optional().describe('Supplier invoice number'),
+    fiscalYear: z.string().optional().describe('Fiscal year'),
+    includeLines: z.boolean().optional().describe('Include PO reference lines'),
+    includeTax: z.boolean().optional().describe('Include tax items'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getSupplierInvoiceV4
+);
+
+server.tool(
+  'get_master_data',
+  'Query SAP master data (V4, requires SAP_COM_0087). Supports: plant, payment_terms, purchasing_organization, purchasing_group, company_code, storage_location.',
+  {
+    type: z.string().describe('Master data type: plant | payment_terms | purchasing_organization | purchasing_group | company_code | storage_location'),
+    key: z.string().optional().describe('Single record key to fetch'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows to return'),
+  },
+  getMasterData
+);
+
 // ---------- Transport selection ----------
 
 async function main() {
@@ -219,7 +316,7 @@ async function main() {
 
       if (req.url === '/' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ name: NAME, version: VERSION, tools: 13, http: true }));
+        res.end(JSON.stringify({ name: NAME, version: VERSION, tools: 20, http: true }));
         return;
       }
 

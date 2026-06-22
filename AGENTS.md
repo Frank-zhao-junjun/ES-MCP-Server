@@ -2,7 +2,7 @@
 
 ## 项目概览
 
-构建面向 SAP S/4HANA Cloud 的 MCP Server，暴露 13 个工具供 AI Agent 通过 HTTP 或 stdio 调用（8 个 MVP + 5 个 Phase 2 基础设施/跨文档工具）。
+构建面向 SAP S/4HANA Cloud 的 MCP Server，暴露 20 个工具供 AI Agent 通过 HTTP 或 stdio 调用（8 个 MVP + 5 个 Phase 2 基础设施 + 7 个 Phase 3 被阻塞工具）。
 
 - 仓库根目录：`/workspace/projects`
 - 源码目录：`MCP Server/`
@@ -60,6 +60,8 @@ S00222941xxx:YourPassword
 
 ## 工具清单
 
+### MVP 工具 (Phase 1, 8 个)
+
 | 工具名 | 说明 |
 |--------|------|
 | `health_check` | 服务健康检查，可选探测 SAP |
@@ -70,11 +72,28 @@ S00222941xxx:YourPassword
 | `get_material_stock` | 物料库存 `API_MATERIAL_STOCK_SRV` |
 | `get_supplier_invoice` | 供应商发票 `API_SUPPLIER_INVOICE_PROCESS_SRV` |
 | `get_cost_center` | 成本中心 `api_cost_center` |
+
+### 基础设施 / 跨文档工具 (Phase 2, 5 个)
+
+| 工具名 | 说明 |
+|--------|------|
 | `get_entity_schema` | 解析 `$metadata` 返回实体字段列表 |
-| `list_sap_scenarios` | 列出 33 个内置 SAP 场景/端点 |
+| `list_sap_scenarios` | 列出 42 个内置 SAP 场景/端点 |
 | `query_sap_scenario` | 按场景 key 动态执行 GET |
 | `trace_sales_order` | 串联 SO → 外向交货 → 开票 → 物料凭证 |
 | `authenticate` | 校验 MCP API Key |
+
+### 被阻塞 / Arrangement 依赖工具 (Phase 3, 7 个)
+
+| 工具名 | 说明 | 依赖场景 |
+|--------|------|---------|
+| `get_purchase_requisition` | 采购申请 V4 | SAP_COM_0102 |
+| `get_schedule_agreement` | 计划协议 V4 | SAP_COM_0103 |
+| `get_sales_contract` | 销售合同 V4 | SAP_COM_0119 |
+| `get_bom` | BOM 物料清单 V2 | API_BILL_OF_MATERIAL_SRV |
+| `get_material_reservation` | 预留 V4 | SAP_COM_0225 |
+| `get_supplier_invoice_v4` | 供应商发票 V4 | SAP_COM_0054 |
+| `get_master_data` | 主数据查询（工厂/付款条件/采购组织等） | SAP_COM_0087 |
 
 ## 本地验证
 
