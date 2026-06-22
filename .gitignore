@@ -1,0 +1,18 @@
+# .gitignore
+
+# Secrets — never commit
+user.txt
+.env
+MCP Server/.env
+
+# Dependencies
+node_modules/
+
+# Probe / runtime artifacts (optional — keep Probe_Latest.json if you want it tracked)
+_mcp_stderr.txt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.claude/
