@@ -34,15 +34,18 @@ ES 接口/
 
 `E:\00 - 中数通ES环境\ES+EPC Demo系统搭建\EPC接口\`
 
-## 当前状态（2026-06-22）
+## 当前状态（2026-06-23）
 
 | 模块 | 状态 |
 |------|------|
-| SAP 连通性探测 | ✅ 完成 — 33 端点，**OK 24 / 403 9** |
+| SAP 连通性探测 | ✅ 完成 — 42 端点，**OK 24 / 403 18** |
 | `ES接口清单.xlsx` | ✅ 已同步最新探测结果 |
 | `user.txt` 中文格式解析 | ✅ 探测脚本已支持 |
-| MCP Server 源码 | ⚠️ **待实现** — `mcp-server.js` 不在磁盘（历史曾以 `sap-s4-mcp v0.1` 运行过） |
-| MCP 工具端到端验证 | ⏳ 待源码恢复后执行 |
+| MCP Server 源码 | ✅ **已实现** — Phase 0→4 全部完成 |
+| MCP 工具注册 | ✅ **20 个工具**（8 MVP + 5 基础设施 + 7 被阻塞） |
+| MCP 工具端到端验证 | ✅ HTTP / stdio 双模式冒烟测试通过 |
+| 凭证单元测试 | ✅ 11 个测试全部通过 |
+| Git 卫生 | ✅ `.gitignore` 排除 `user.txt` / `.env` / `node_modules` |
 
 ## 快速开始
 
@@ -78,11 +81,11 @@ node scripts/probe-sap-connectivity.js
 python scripts/sync-excel-from-probe.py
 ```
 
-### 4. 启动 MCP Server（源码就绪后）
+### 4. 启动 MCP Server
 
 ```powershell
 cd "MCP Server"
-npm install
+pnpm install
 node mcp-server.js
 ```
 

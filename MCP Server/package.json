@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node mcp-server.js",
-    "probe": "node ../scripts/probe-sap-connectivity.js"
+    "probe": "node ../scripts/probe-sap-connectivity.js",
+    "test": "node test/credentials.test.js"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.6",
