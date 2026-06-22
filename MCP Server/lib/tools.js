@@ -63,7 +63,7 @@ async function healthCheck(args = {}) {
   }
 
   if (includeScenarios) {
-    checks.scenarios = 33; // Known count from Probe_Latest.json; will be dynamic in Phase 2
+    checks.scenarios = listScenarios(config.client).length;
   }
 
   return toMcpResult(checks);
@@ -169,6 +169,8 @@ async function getMaterialStock(args = {}) {
   let $filter = filter;
   if (material && !$filter) {
     $filter = `Material eq '${material}'`;
+  } else if (material && $filter) {
+    $filter += ` and Material eq '${material}'`;
   }
   if (plant && !$filter) {
     $filter = `Plant eq '${plant}'`;
@@ -290,7 +292,15 @@ async function querySapScenario({ key, filter, top, entity }) {
 
   // Allow overriding entity segment for flexible queries
   if (entity) {
-    path = path.replace(/\/[^/?]+\?/, `/${entity}?`);
+    const qIdx = path.indexOf('?');
+    if (qIdx !== -1) {
+      const baseSeg = path.substring(0, qIdx);
+      const lastSlash = baseSeg.lastIndexOf('/');
+      path = `${baseSeg.substring(0, lastSlash + 1)}${entity}${path.substring(qIdx)}`;
+    } else {
+      const lastSlash = path.lastIndexOf('/');
+      path = `${path.substring(0, lastSlash + 1)}${entity}`;
+    }
   }
 
   const urlObj = new URL(path, 'http://localhost');
