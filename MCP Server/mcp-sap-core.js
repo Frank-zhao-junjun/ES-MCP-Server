@@ -81,8 +81,8 @@ function setCached(key, value) {
  * Tries every user × password combination until one succeeds.
  *
  * @param {string} url - Full URL or path relative to SAP_BASE_URL
- * @param {{ bypassCache?: boolean }} [options={}]
- * @returns {{ status: number, ok: boolean, data?: any, error?: object }}
+ * @param {{ bypassCache?: boolean, accept?: string }} [options={}]
+ * @returns {{ status: number, ok: boolean, text?: string, data?: any, error?: object }}
  */
 async function sapGet(url, options = {}) {
   const fullUrl = url.startsWith('http') ? url : `${config.baseUrl}${url}`;
@@ -98,6 +98,7 @@ async function sapGet(url, options = {}) {
     return { status: 0, ok: false, error: { error: 'SAP_AUTH_FAILED', message: 'No credentials parsed from user.txt' } };
   }
 
+  const accept = options.accept || 'application/json';
   let lastStatus = 0;
   let lastText = '';
 
@@ -109,7 +110,7 @@ async function sapGet(url, options = {}) {
           method: 'GET',
           headers: {
             Authorization: `Basic ${auth}`,
-            Accept: 'application/json',
+            Accept: accept,
             'sap-client': config.client,
           },
           signal: AbortSignal.timeout(config.timeoutMs),
@@ -121,12 +122,16 @@ async function sapGet(url, options = {}) {
 
         if (resp.ok) {
           let data;
-          try {
-            data = text ? JSON.parse(text) : {};
-          } catch {
+          if (accept === 'application/json') {
+            try {
+              data = text ? JSON.parse(text) : {};
+            } catch {
+              data = text;
+            }
+          } else {
             data = text;
           }
-          const result = { status: resp.status, ok: true, data };
+          const result = { status: resp.status, ok: true, text, data };
           setCached(key, result);
           return result;
         }
@@ -140,8 +145,60 @@ async function sapGet(url, options = {}) {
     }
   }
 
-  const result = { status: lastStatus, ok: false, error: formatSapError(lastStatus, lastText) };
+  const result = { status: lastStatus, ok: false, text: lastText, error: formatSapError(lastStatus, lastText) };
   return result;
+}
+
+/**
+ * Parse $metadata XML and extract properties for a given EntityType.
+ * Returns simple array of property names + types (best-effort, no XML parser dependency).
+ *
+ * @param {string} xmlText
+ * @param {string} entityName
+ * @returns {Array<{name: string, type: string}>}
+ */
+function parseMetadata(xmlText, entityName) {
+  if (!xmlText || typeof xmlText !== 'string') return [];
+
+  // Find EntityType element matching entity name
+  const entityTypeRegex = new RegExp(`<EntityType[^>]*\\bName="${entityName}"[^>]*>([\\s\\S]*?)</EntityType>`, 'i');
+  const entityMatch = xmlText.match(entityTypeRegex);
+  if (!entityMatch) return [];
+
+  const body = entityMatch[1];
+  const properties = [];
+
+  // Match Property elements inside the EntityType
+  const propertyRegex = /<Property[^>]*\bName="([^"]+)"[^>]*\bType="([^"]+)"[^>]*\/?>/gi;
+  let m;
+  while ((m = propertyRegex.exec(body)) !== null) {
+    properties.push({ name: m[1], type: m[2] });
+  }
+
+  // Also include Key properties if present
+  const keyRegex = /<PropertyRef[^>]*\bName="([^"]+)"\s*\/?>/gi;
+  const keyNames = new Set();
+  while ((m = keyRegex.exec(body)) !== null) {
+    keyNames.add(m[1]);
+  }
+
+  return properties.map((p) => ({ ...p, isKey: keyNames.has(p.name) }));
+}
+
+/**
+ * Fetch and parse $metadata for a service path.
+ *
+ * @param {string} servicePath - e.g. /sap/opu/odata/sap/API_PRODUCT_SRV
+ * @param {string} entityName - e.g. A_Product
+ * @returns {{ status: number, ok: boolean, properties?: Array, error?: object }}
+ */
+async function sapGetEntitySchema(servicePath, entityName) {
+  const metadataUrl = `${servicePath.replace(/\/$/, '')}/$metadata`;
+  const result = await sapGet(metadataUrl, { accept: 'application/xml' });
+  if (!result.ok) return result;
+
+  const properties = parseMetadata(result.data, entityName);
+  return { status: result.status, ok: true, properties };
 }
 
 module.exports = {
@@ -149,5 +206,7 @@ module.exports = {
   loadConfig,
   getCredentials,
   sapGet,
+  sapGetEntitySchema,
+  parseMetadata,
   formatSapError,
 };

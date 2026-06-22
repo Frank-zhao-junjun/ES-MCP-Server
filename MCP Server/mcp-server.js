@@ -19,6 +19,11 @@ const {
   getMaterialStock,
   getSupplierInvoice,
   getCostCenter,
+  getEntitySchema,
+  listSapScenarios,
+  querySapScenario,
+  traceSalesOrder,
+  authenticate,
 } = require('./lib/tools');
 
 const VERSION = '0.1.0';
@@ -135,6 +140,53 @@ server.tool(
   getCostCenter
 );
 
+server.tool(
+  'get_entity_schema',
+  'Parse SAP $metadata for a service and entity to list available fields.',
+  {
+    service: z.string().describe('Service name or full service path, e.g. API_PRODUCT_SRV or /sap/opu/odata/sap/API_PRODUCT_SRV'),
+    entity: z.string().describe('Entity type name, e.g. A_Product'),
+  },
+  getEntitySchema
+);
+
+server.tool(
+  'list_sap_scenarios',
+  'List all built-in SAP scenario/endpoint keys from the probe registry.',
+  {},
+  listSapScenarios
+);
+
+server.tool(
+  'query_sap_scenario',
+  'Execute a dynamic GET for a scenario key from list_sap_scenarios.',
+  {
+    key: z.string().describe('Scenario key, e.g. sales_order_v4'),
+    filter: z.string().optional().describe('OData $filter expression'),
+    top: z.number().int().min(1).max(1000).optional().describe('Maximum rows'),
+    entity: z.string().optional().describe('Override entity segment in the scenario path'),
+  },
+  querySapScenario
+);
+
+server.tool(
+  'trace_sales_order',
+  'Best-effort trace a sales order through outbound delivery, billing, and material document.',
+  {
+    salesOrder: z.string().describe('Sales order number'),
+  },
+  traceSalesOrder
+);
+
+server.tool(
+  'authenticate',
+  'Validate the configured MCP API key.',
+  {
+    apiKey: z.string().describe('API key to validate'),
+  },
+  authenticate
+);
+
 // ---------- Transport selection ----------
 
 async function main() {
@@ -167,7 +219,7 @@ async function main() {
 
       if (req.url === '/' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ name: NAME, version: VERSION, tools: 8, http: true }));
+        res.end(JSON.stringify({ name: NAME, version: VERSION, tools: 13, http: true }));
         return;
       }
 

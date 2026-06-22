@@ -1,4 +1,5 @@
-const { sapGet, config } = require('../mcp-sap-core');
+const { sapGet, sapGetEntitySchema, config } = require('../mcp-sap-core');
+const { ENDPOINTS, resolvePath, getEndpointByKey, listScenarios } = require('./sap-endpoints');
 
 /**
  * Extract result array from OData response regardless of V2 ({ d: { results } })
@@ -237,6 +238,131 @@ async function getCostCenter(args = {}) {
   return toMcpResult({ results: extractResults(resp.data) });
 }
 
+// =============================================================================
+// Phase 2 — Infra + cross-document tools
+// =============================================================================
+
+/**
+ * Task 2.2 — Parse $metadata for a service/entity and return property list.
+ */
+async function getEntitySchema({ service, entity }) {
+  if (!service || !entity) {
+    return toMcpError(JSON.stringify({ error: 'MISSING_PARAMS', message: 'service and entity are required' }));
+  }
+
+  const servicePath = service.startsWith('/sap/') ? service : `/sap/opu/odata/sap/${service}`;
+  const resp = await sapGetEntitySchema(servicePath, entity);
+  if (!resp.ok) return toMcpError(JSON.stringify(resp.error));
+
+  return toMcpResult({
+    service,
+    entity,
+    properties: resp.properties,
+    count: resp.properties.length,
+  });
+}
+
+/**
+ * Task 2.3 — Return the built-in SAP scenario/endpoint table (≥33 entries).
+ */
+async function listSapScenarios() {
+  const scenarios = listScenarios(config.client);
+  return toMcpResult({ count: scenarios.length, scenarios });
+}
+
+/**
+ * Task 2.4 — Dynamic GET by scenario key with optional entity/filter/top.
+ */
+async function querySapScenario({ key, filter, top, entity }) {
+  if (!key) {
+    return toMcpError(JSON.stringify({ error: 'MISSING_PARAMS', message: 'key is required' }));
+  }
+
+  const ep = getEndpointByKey(key);
+  if (!ep) {
+    return toMcpError(JSON.stringify({ error: 'SCENARIO_NOT_FOUND', message: `No scenario found for key: ${key}` }));
+  }
+
+  let path = resolvePath(ep, config.client);
+  if (!path) {
+    return toMcpError(JSON.stringify({ error: 'INVALID_SCENARIO', message: 'Scenario has no resolvable path' }));
+  }
+
+  // Allow overriding entity segment for flexible queries
+  if (entity) {
+    path = path.replace(/\/[^/?]+\?/, `/${entity}?`);
+  }
+
+  const urlObj = new URL(path, 'http://localhost');
+  const params = urlObj.searchParams;
+  if (filter !== undefined) params.set('$filter', filter);
+  if (top !== undefined) params.set('$top', String(top));
+  path = `${urlObj.pathname}?${params.toString()}`;
+
+  const resp = await sapGet(path);
+  if (!resp.ok) return toMcpError(JSON.stringify(resp.error));
+
+  return toMcpResult({
+    key,
+    entity,
+    results: extractResults(resp.data),
+  });
+}
+
+/**
+ * Task 2.5 — Best-effort trace: SalesOrder → OutboundDelivery → BillingDocument → MaterialDocument.
+ */
+async function traceSalesOrder({ salesOrder }) {
+  if (!salesOrder) {
+    return toMcpError(JSON.stringify({ error: 'MISSING_PARAMS', message: 'salesOrder is required' }));
+  }
+
+  const trace = {
+    salesOrder,
+    legs: [],
+  };
+
+  // 1. Sales Order header
+  const soResp = await sapGet(
+    `/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder('${salesOrder}')?$format=json`
+  );
+  trace.legs.push({ step: 'SalesOrder', ok: soResp.ok, status: soResp.status, error: soResp.error?.error });
+  if (!soResp.ok) return toMcpResult(trace);
+
+  // 2. Outbound delivery references (best-effort via V2 header)
+  const odResp = await sapGet(
+    `/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/A_OutbDeliveryHeader?$filter=ReferenceSDDocument eq '${salesOrder}'&$top=10&$format=json`
+  );
+  trace.legs.push({ step: 'OutboundDelivery', ok: odResp.ok, status: odResp.status, count: extractResults(odResp.data).length, error: odResp.error?.error });
+
+  // 3. Billing documents referencing the SO
+  const billingResp = await sapGet(
+    `/sap/opu/odata/sap/API_BILLING_DOCUMENT_SRV/A_BillingDocument?$filter=ReferenceSDDocument eq '${salesOrder}'&$top=10&$format=json`
+  );
+  trace.legs.push({ step: 'BillingDocument', ok: billingResp.ok, status: billingResp.status, count: extractResults(billingResp.data).length, error: billingResp.error?.error });
+
+  // 4. Material documents ( Goods Movement ) — broad filter on ReferenceDocument
+  const matDocResp = await sapGet(
+    `/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentHeader?$filter=ReferenceDocument eq '${salesOrder}'&$top=10&$format=json`
+  );
+  trace.legs.push({ step: 'MaterialDocument', ok: matDocResp.ok, status: matDocResp.status, count: extractResults(matDocResp.data).length, error: matDocResp.error?.error });
+
+  return toMcpResult(trace);
+}
+
+/**
+ * Task 2.7 — Validate API key. Useful for clients before calling protected tools.
+ */
+async function authenticate({ apiKey }) {
+  if (!apiKey) {
+    return toMcpError(JSON.stringify({ error: 'MISSING_API_KEY', message: 'apiKey is required' }));
+  }
+  if (apiKey !== config.apiKey) {
+    return toMcpError(JSON.stringify({ error: 'INVALID_API_KEY', message: 'Provided API key is invalid' }));
+  }
+  return toMcpResult({ success: true, message: 'API key valid' });
+}
+
 module.exports = {
   healthCheck,
   getProduct,
@@ -246,4 +372,9 @@ module.exports = {
   getMaterialStock,
   getSupplierInvoice,
   getCostCenter,
+  getEntitySchema,
+  listSapScenarios,
+  querySapScenario,
+  traceSalesOrder,
+  authenticate,
 };

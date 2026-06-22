@@ -2,7 +2,7 @@
 
 ## 项目概览
 
-构建面向 SAP S/4HANA Cloud 的 MCP Server，暴露 8 个 MVP 工具供 AI Agent 通过 HTTP 或 stdio 调用。
+构建面向 SAP S/4HANA Cloud 的 MCP Server，暴露 13 个工具供 AI Agent 通过 HTTP 或 stdio 调用（8 个 MVP + 5 个 Phase 2 基础设施/跨文档工具）。
 
 - 仓库根目录：`/workspace/projects`
 - 源码目录：`MCP Server/`
@@ -13,12 +13,13 @@
 
 ```
 MCP Server/
-├── package.json          # 依赖：@modelcontextprotocol/sdk, axios, dotenv, zod
+├── package.json          # 依赖：@modelcontextprotocol/sdk, dotenv, zod, hono
 ├── mcp-server.js         # 入口：注册工具 + 启动 stdio / HTTP transport
-├── mcp-sap-core.js       # SAP HTTP 客户端、缓存、错误映射、配置加载
+├── mcp-sap-core.js       # SAP HTTP 客户端、缓存、错误映射、配置加载、$metadata 解析
 ├── lib/
 │   ├── credentials.js    # 解析 ../user.txt（user:password 格式）
-│   └── tools.js          # 8 个 MVP 工具 handler
+│   ├── sap-endpoints.js  # 共享 SAP 场景/端点注册表（33 项）
+│   └── tools.js          # 13 个工具 handler
 ├── .env.example          # 环境变量模板
 └── .env                  # 本地配置，不提交（已 .gitignore）
 ```
@@ -69,6 +70,11 @@ S00222941xxx:YourPassword
 | `get_material_stock` | 物料库存 `API_MATERIAL_STOCK_SRV` |
 | `get_supplier_invoice` | 供应商发票 `API_SUPPLIER_INVOICE_PROCESS_SRV` |
 | `get_cost_center` | 成本中心 `api_cost_center` |
+| `get_entity_schema` | 解析 `$metadata` 返回实体字段列表 |
+| `list_sap_scenarios` | 列出 33 个内置 SAP 场景/端点 |
+| `query_sap_scenario` | 按场景 key 动态执行 GET |
+| `trace_sales_order` | 串联 SO → 外向交货 → 开票 → 物料凭证 |
+| `authenticate` | 校验 MCP API Key |
 
 ## 本地验证
 
