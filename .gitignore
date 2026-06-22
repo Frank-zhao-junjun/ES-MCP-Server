@@ -1,91 +1,18 @@
-node_modules
-dist
-.DS_Store
-*.swp
-.git/*
-__pycache__/
-*.pyc
-.venv/*
-*.o
-*.a
-/vendor
-*.egg-info/
-/.env
+# .gitignore
+
+# Secrets — never commit
+user.txt
 .env
-.cozeproj/reduction
+MCP Server/.env
 
-# JS/TS bundlers & build outputs
-.next
-.nuxt
-.turbo
-.vercel
-.parcel-cache
-.cache
-coverage
-storybook-static
+# Dependencies
+node_modules/
 
-# Package manager artifacts
-.pnp*
-.npm
+# Probe / runtime artifacts (optional — keep Probe_Latest.json if you want it tracked)
+_mcp_stderr.txt
 
-# Python tooling
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.tox/
-
-# Go tooling
-bin/
-*.test
-
-# Editor / IDE
-.vscode/
-.idea/
-*.iml
-
-# OS / misc
+# OS / editor
+.DS_Store
 Thumbs.db
-ehthumbs.db
-
-# Logs
-output.log
-*.log
-*.log.*
-logs/
-
-# 视频文件
-*.mp4
-*.avi
-*.mov
-*.wmv
-*.flv
-*.mkv
-*.webm
-*.m4v
-*.mpeg
-*.mpg
-*.3gp
-*.f4v
-*.rmvb
-*.vob
-
-# 归档文件
-*.iso
-*.dmg
-*.rar
-*.zip
-*.gz
-
-# 文档类也默认加入
-*.pdf
-*.docx
-*.doc
-*.xlsx
-*.xls
-*.ppt
-*.pptx
-*.xlsx
-*.csv
-
-# Preview files
-.preview
+*.swp
+.claude/

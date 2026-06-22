@@ -1,0 +1,121 @@
+﻿[
+    {
+        "Name":  "Product V4 root",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_product/srvd_a2x/sap/product/0002/",
+        "Status":  200,
+        "Ok":  true,
+        "Note":  ""
+    },
+    {
+        "Name":  "Product V4 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_product/srvd_a2x/sap/product/0002/$metadata",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "Customer V2 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BUSINESS_PARTNER/$metadata?sap-client=100",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "Customer V2 top1",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_Customer?sap-client=100\u0026$top=1\u0026$format=json",
+        "Status":  200,
+        "Ok":  true,
+        "Note":  ""
+    },
+    {
+        "Name":  "Material Doc V2 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/$metadata?sap-client=100",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "Material Doc V2 top1",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentHeader?sap-client=100\u0026$top=1\u0026$format=json",
+        "Status":  200,
+        "Ok":  true,
+        "Note":  ""
+    },
+    {
+        "Name":  "Stock V2 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MATERIAL_STOCK_SRV/$metadata?sap-client=100",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "Stock V2 top1",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_MATERIAL_STOCK_SRV/A_MaterialStock?sap-client=100\u0026$top=1\u0026$format=json",
+        "Status":  200,
+        "Ok":  true,
+        "Note":  ""
+    },
+    {
+        "Name":  "PO Conf V2 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_PROD_ORDER_CONFIRMATION_2_SRV/$metadata?sap-client=100",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "PO V4 root",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/",
+        "Status":  200,
+        "Ok":  true,
+        "Note":  ""
+    },
+    {
+        "Name":  "PO V4 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/$metadata",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "SO V4 root",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/",
+        "Status":  200,
+        "Ok":  true,
+        "Note":  ""
+    },
+    {
+        "Name":  "SO V4 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/$metadata",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "Billing V2 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BILLING_DOCUMENT_SRV/$metadata?sap-client=100",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "Billing V2 top1",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BILLING_DOCUMENT_SRV/A_BillingDocument?sap-client=100\u0026$top=1\u0026$format=json",
+        "Status":  403,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "OD V2 metadata",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/$metadata?sap-client=100",
+        "Status":  406,
+        "Ok":  false,
+        "Note":  ""
+    },
+    {
+        "Name":  "OD V2 top1",
+        "Url":  "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/A_OutbDeliveryHeader?sap-client=100\u0026$top=1\u0026$format=json",
+        "Status":  403,
+        "Ok":  false,
+        "Note":  ""
+    }
+]
