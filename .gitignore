@@ -16,7 +16,10 @@ _mcp_stderr.txt
 Thumbs.db
 *.swp
 .claude/
+<<<<<<< HEAD
 
 # Preview files
 .preview
 .cozeproj/reduction
+=======
+>>>>>>> origin/main

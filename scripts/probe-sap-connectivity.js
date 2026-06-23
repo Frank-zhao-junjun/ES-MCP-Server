@@ -28,7 +28,56 @@ function parseCredentials(text) {
   };
 }
 
+<<<<<<< HEAD
 const { ENDPOINTS, resolvePath } = require(path.join(__dirname, '..', 'MCP Server', 'lib', 'sap-endpoints.js'));
+=======
+const SI_V2 = `/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV`;
+
+const ENDPOINTS = [
+  // --- 原有 8 项 ---
+  { 分类: 'SAP上游', 名称: '产品主数据 V2', 场景: 'SAP_COM_0009', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_PRODUCT_SRV/A_Product?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '客户主数据 V2', 场景: 'SAP_COM_0008', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_Customer?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '销售订单 V4', 场景: 'SAP_COM_0109', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '生产订单 V4', 场景: 'SAP_COM_0104', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_productionorder/srvd_a2x/sap/productionorder/0001/ProductionOrder?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '外向交货 V2', 场景: 'SAP_COM_0106', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002/A_OutbDeliveryHeader?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '开票 V2', 场景: 'SAP_COM_0124', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_BILLING_DOCUMENT_SRV/A_BillingDocument?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '物料库存 V2', 场景: 'SAP_COM_0164', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_MATERIAL_STOCK_SRV/A_MatlStkInAcctMod?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '采购订单 V2', 场景: 'legacy', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_PURCHASEORDER_PROCESS_SRV/A_PurchaseOrder?$top=1&$format=json&sap-client=${CLIENT}` },
+
+  // --- 扩展：产品 / 业务伙伴 ---
+  { 分类: 'SAP上游', 名称: '产品主数据 V4', 场景: 'SAP_COM_0009', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_product/srvd_a2x/sap/product/0002/Product?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '物料组 ProductGroup V4', 场景: 'SAP_COM_0009', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_productgroup_2/srvd_a2x/sap/productgroup/0001/ProductGroup?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '供应商 V2', 场景: 'SAP_COM_0008', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_Supplier?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '供应商公司 V2', 场景: 'SAP_COM_0008', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_SupplierCompany?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '物料凭证 V2', 场景: 'SAP_COM_0108', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentHeader?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'SAP上游', 名称: '成本中心 V4', 场景: 'SAP_COM_0008', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_cost_center/srvd_a2x/sap/costcenter/0001/A_CostCenter_2?$top=1&$format=json&sap-client=${CLIENT}` },
+
+  // --- 扩展：采购订单 V4 (EPC / SAP_COM_0053) ---
+  { 分类: 'EPC采购', 名称: '采购订单抬头 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/PurchaseOrder?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'EPC采购', 名称: '采购订单行 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/PurchaseOrderItem?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'EPC采购', 名称: '采购计划行 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/PurchaseOrderScheduleLine?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'EPC采购', 名称: '采购行定价 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/PurOrderItemPricingElement?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'EPC采购', 名称: '采购抬头备注 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/PurchaseOrderNote?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'EPC采购', 名称: '采购行备注 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/PurchaseOrderItemNote?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: 'EPC采购', 名称: '委外组件 V4', 场景: 'SAP_COM_0053', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001/POSubcontractingComponent?$top=1&$format=json&sap-client=${CLIENT}` },
+
+  // --- 供应商发票：V2 可用 (legacy)；V4 需 SAP_COM_0054 ---
+  { 分类: 'EPC应付', 名称: '供应商发票列表 V2', 场景: 'legacy(V2可用)', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `${SI_V2}/A_SupplierInvoice?$top=1&$format=json&sap-client=${CLIENT}`, 读取示例: `GET ${BASE}${SI_V2}/A_SupplierInvoice?$top=50&$format=json&sap-client=${CLIENT}`, 备注: '列表；V4需SAP_COM_0054' },
+  { 分类: 'EPC应付', 名称: '供应商发票单张 V2', 场景: 'legacy(V2可用)', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `${SI_V2}/A_SupplierInvoice(SupplierInvoice='5105600101',FiscalYear='2025')?$format=json&sap-client=${CLIENT}`, 读取示例: `GET ${BASE}${SI_V2}/A_SupplierInvoice(SupplierInvoice='{Invoice}',FiscalYear='{Year}')?$format=json&sap-client=${CLIENT}`, 备注: '示例5105600101/2025' },
+  { 分类: 'EPC应付', 名称: '供应商发票行(PO参考) V2', 场景: 'legacy(V2可用)', 方法: 'GET', 协议: 'OData V2/JSON', 路径: `${SI_V2}/A_SuplrInvcItemPurOrdRef?$filter=SupplierInvoice eq '5105600101' and FiscalYear eq '2025'&$top=1&$format=json&sap-client=${CLIENT}`, 读取示例: `GET ${BASE}${SI_V2}/A_SuplrInvcItemPurOrdRef?$filter=SupplierInvoice eq '{Invoice}' and FiscalYear eq '{Year}'&$format=json&sap-client=${CLIENT}`, 备注: '实体A_SuplrInvcItemPurOrdRef' },
+  { 分类: 'EPC应付', 名称: '供应商发票抬头 V4', 场景: 'SAP_COM_0054', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_supplierinvoice/srvd_a2x/sap/supplierinvoice/0001/SupplierInvoice?$top=1&$format=json&sap-client=${CLIENT}`, 备注: '需开通Arrangement' },
+  { 分类: 'EPC应付', 名称: '供应商发票行(PO参考) V4', 场景: 'SAP_COM_0054', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_supplierinvoice/srvd_a2x/sap/supplierinvoice/0001/SuplrInvcItemPurOrdRef?$top=1&$format=json&sap-client=${CLIENT}`, 备注: '需开通Arrangement' },
+  { 分类: 'EPC应付', 名称: '供应商发票税 V4', 场景: 'SAP_COM_0054', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_supplierinvoice/srvd_a2x/sap/supplierinvoice/0001/SupplierInvoiceTax?$top=1&$format=json&sap-client=${CLIENT}`, 备注: '需开通Arrangement' },
+
+  // --- 扩展：主数据 (SAP_COM_0087 等，预期部分 403) ---
+  { 分类: '主数据', 名称: '付款条件 V4', 场景: 'SAP_COM_0087', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_paymentterms/srvd_a2x/sap/paymentterms/0001/PaymentTerms?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: '主数据', 名称: '工厂 V4', 场景: 'SAP_COM_0087', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_plant/srvd_a2x/sap/plant/0001/Plant?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: '主数据', 名称: '采购组织 V4', 场景: 'SAP_COM_0087', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchasingorganization/srvd_a2x/sap/purchasingorganization/0001/A_PurchasingOrganization?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: '主数据', 名称: '采购组 V4', 场景: 'SAP_COM_0087', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_purchasinggroup/srvd_a2x/sap/purchasinggroup/0001/A_PurchasingGroup?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: '主数据', 名称: '公司代码 V4', 场景: 'SAP_COM_0087', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_companycode/srvd_a2x/sap/companycode/0001/CompanyCode?$top=1&$format=json&sap-client=${CLIENT}` },
+  { 分类: '主数据', 名称: '库存地点 V4', 场景: 'SAP_COM_0087', 方法: 'GET', 协议: 'OData V4/JSON', 路径: `/sap/opu/odata4/sap/api_storagelocation/srvd_a2x/sap/storagelocation/0001/StorageLocation?$top=1&$format=json&sap-client=${CLIENT}` },
+];
+>>>>>>> origin/main
 
 async function probe(url, user, password) {
   const auth = Buffer.from(`${user}:${password}`, 'utf8').toString('base64');
@@ -53,7 +102,11 @@ async function main() {
 
   const results = [];
   for (const ep of ENDPOINTS) {
+<<<<<<< HEAD
     const url = `${BASE}${resolvePath(ep, CLIENT)}`;
+=======
+    const url = `${BASE}${ep.路径}`;
+>>>>>>> origin/main
     let status = 0;
     let note = 'FAIL';
     let credUsed = '';
