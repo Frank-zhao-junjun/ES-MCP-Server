@@ -432,32 +432,47 @@ async function authenticate({ apiKey }) {
 // =============================================================================
 
 /**
- * Task 3.1 — Purchase Requisition (SAP_COM_0102, V4)
+ * Task 3.1 — Purchase Requisition (SAP_COM_0102, API_PURCHASEREQUISITION_2)
  */
 async function getPurchaseRequisition(args = {}) {
   const { purchaseRequisition, includeItems = false, filter, top = 10 } = args;
-  const base = '/sap/opu/odata4/sap/api_purchaserequisition/srvd_a2x/sap/purchaserequisition/0001';
-  const expandParts = [];
-  if (includeItems) expandParts.push('to_PurchaseReqnItem');
-  const $expand = expandParts.length ? expandParts.join(',') : undefined;
+  const base = '/sap/opu/odata4/sap/api_purchaserequisition_2/srvd_a2x/sap/purchaserequisition/0001';
+  const entity = 'PurchaseReqn';
+  const keyField = 'PurchaseRequisition';
 
   let url;
   if (purchaseRequisition) {
-    url = singleKeyUrl(`${base}/PurchaseRequisition`, 'PurchaseRequisition', purchaseRequisition, {
-      $format: 'json', $expand, sapClient: false,
+    url = singleKeyUrl(`${base}/${entity}`, keyField, purchaseRequisition, {
+      $format: 'json',
+      sapClient: false,
     });
   } else {
-    url = makeUrl(`${base}/PurchaseRequisition`, { $filter: filter, $top: top, $format: 'json', $expand, sapClient: false });
+    url = makeUrl(`${base}/${entity}`, { $filter: filter, $top: top, $format: 'json', sapClient: false });
   }
 
   const resp = await sapGet(url);
   if (!resp.ok) {
     return toMcpError(JSON.stringify({
       ...resp.error,
-      hint: 'This endpoint requires SAP_COM_0102 Communication Arrangement. Ask Basis to open it.',
+      hint: 'This endpoint requires SAP_COM_0102 (API_PURCHASEREQUISITION_2). Ask Basis to open the Communication Arrangement.',
     }));
   }
-  return toMcpResult({ results: extractResults(resp.data) });
+
+  const records = extractResults(resp.data);
+  if (includeItems) {
+    let items = [];
+    if (purchaseRequisition) {
+      const itemUrl = makeUrl(`${base}/PurchaseReqnItem`, {
+        $filter: `${keyField} eq '${purchaseRequisition}'`,
+        $format: 'json',
+        sapClient: false,
+      });
+      const itemResp = await sapGet(itemUrl);
+      if (itemResp.ok) items = extractResults(itemResp.data);
+    }
+    return toMcpResult({ results: records, items });
+  }
+  return toMcpResult({ results: records });
 }
 
 /**

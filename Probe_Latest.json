@@ -370,22 +370,22 @@
     "通信场景": "SAP_COM_0102",
     "接口名称": "采购申请 V4",
     "方法": "GET",
-    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition/srvd_a2x/sap/purchaserequisition/0001/PurchaseRequisition?$top=1&$format=json&sap-client=100",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition_2/srvd_a2x/sap/purchaserequisition/0001/PurchaseReqn?$top=1&$format=json&sap-client=100",
     "协议": "OData V4/JSON",
     "鉴权": "Basic Auth + sap-client",
-    "连通性": "FAIL(403)",
-    "备注": "需开通SAP_COM_0102"
+    "连通性": "OK(200)",
+    "备注": "API_PURCHASEREQUISITION_2; user=EPC_USER"
   },
   {
     "分类": "采购",
     "通信场景": "SAP_COM_0102",
     "接口名称": "采购申请行 V4",
     "方法": "GET",
-    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition/srvd_a2x/sap/purchaserequisition/0001/PurchaseRequisitionItem?$top=1&$format=json&sap-client=100",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition_2/srvd_a2x/sap/purchaserequisition/0001/PurchaseReqnItem?$top=1&$format=json&sap-client=100",
     "协议": "OData V4/JSON",
     "鉴权": "Basic Auth + sap-client",
-    "连通性": "FAIL(403)",
-    "备注": "需开通SAP_COM_0102"
+    "连通性": "OK(200)",
+    "备注": "API_PURCHASEREQUISITION_2; user=EPC_USER"
   },
   {
     "分类": "采购",
