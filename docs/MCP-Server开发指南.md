@@ -61,6 +61,11 @@ MCP Server/
 └── README.md
 ```
 
+### 架构约束
+
+- `mcp-server.js` 不得硬编码 OData URL；所有 SAP 路径定义在 `lib/tools.js` 或 `lib/sap-endpoints.js`。
+- L2（MCP 协议层）与 L3（SAP 桥接层）职责分离：`mcp-server.js` 负责工具注册与传输，`mcp-sap-core.js` + `lib/` 负责凭证、HTTP、V2/V4 解析、错误映射。
+
 ---
 
 ## 3. 环境变量
@@ -267,9 +272,10 @@ MCP Server/
   "mcpServers": {
     "sap-s4": {
       "command": "node",
-      "args": ["E:\\00 - 中数通ES环境\\ES 接口\\MCP Server\\mcp-server.js"],
+      "args": ["E:\\00 - 中数通ES环境\\ES-MCP-Server\\MCP Server\\mcp-server.js", "--stdio"],
       "env": {
-        "SAP_CREDENTIALS_FILE": "E:\\00 - 中数通ES环境\\ES 接口\\user.txt"
+        "SAP_CREDENTIALS_FILE": "E:\\00 - 中数通ES环境\\ES-MCP-Server\\user.txt",
+        "MCP_ENABLE_HTTP_TRANSPORT": "false"
       }
     }
   }

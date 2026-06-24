@@ -33,11 +33,19 @@ const {
   getMasterData,
 } = require('./lib/tools');
 
-const VERSION = '0.1.0';
+const pkg = require('./package.json');
+const VERSION = pkg.version;
 const NAME = 'sap-s4-mcp';
 
 function log(...args) {
   console.error(`[${NAME}]`, ...args);
+}
+
+function withToolLog(toolName, handler) {
+  return async (...args) => {
+    console.error(`[${new Date().toISOString()}] ${toolName}`);
+    return handler(...args);
+  };
 }
 
 const server = new McpServer(
@@ -51,6 +59,10 @@ const server = new McpServer(
     },
   }
 );
+
+const registerTool = server.tool.bind(server);
+server.tool = (name, description, schema, handler) =>
+  registerTool(name, description, schema, withToolLog(name, handler));
 
 // ---------- Tool schemas and handlers ----------
 
@@ -287,12 +299,14 @@ server.tool(
 // ---------- Transport selection ----------
 
 async function main() {
+  log(`Version ${VERSION}`);
   log(`SAP credentials file: ${config.credentialsFile}`);
 
   const useStdio = process.argv.includes('--stdio');
   if (useStdio) {
     config.enableHttp = false;
   }
+  log(`Transport: ${config.enableHttp ? 'http' : 'stdio'}`);
 
   if (config.enableHttp) {
     const transport = new StreamableHTTPServerTransport({

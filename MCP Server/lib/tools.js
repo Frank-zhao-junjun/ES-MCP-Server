@@ -1,5 +1,8 @@
+const path = require('path');
 const { sapGet, sapGetEntitySchema, config } = require('../mcp-sap-core');
 const { ENDPOINTS, resolvePath, getEndpointByKey, listScenarios } = require('./sap-endpoints');
+
+const { version: PACKAGE_VERSION } = require(path.join(__dirname, '..', 'package.json'));
 
 /**
  * Extract result array from OData response regardless of V2 ({ d: { results } })
@@ -12,6 +15,35 @@ function extractResults(data) {
     if (data.d && typeof data.d === 'object') return [data.d];
   }
   return data;
+}
+
+/**
+ * Split OData $expand line items into a top-level `items` array (§6.1.5).
+ */
+function splitExpandedLineItems(records, expandProp) {
+  const rows = Array.isArray(records) ? records : records == null ? [] : [records];
+  const results = [];
+  const items = [];
+
+  for (const record of rows) {
+    if (!record || typeof record !== 'object') {
+      results.push(record);
+      continue;
+    }
+    const header = { ...record };
+    const expanded = header[expandProp];
+    delete header[expandProp];
+
+    if (Array.isArray(expanded)) {
+      items.push(...expanded);
+    } else if (expanded && typeof expanded === 'object') {
+      items.push(expanded);
+    }
+
+    results.push(header);
+  }
+
+  return { results, items };
 }
 
 function buildQuery(params) {
@@ -52,7 +84,7 @@ async function healthCheck(args = {}) {
   const { includeSapCheck = true, includeScenarios = false } = args;
   const checks = {
     mcp: 'ok',
-    version: '0.1.0',
+    version: PACKAGE_VERSION,
     time: new Date().toISOString(),
   };
 
@@ -127,7 +159,12 @@ async function getSalesOrderStatus(args = {}) {
 
   const resp = await sapGet(url);
   if (!resp.ok) return toMcpError(JSON.stringify(resp.error));
-  return toMcpResult({ results: extractResults(resp.data) });
+  const records = extractResults(resp.data);
+  if (includeItems) {
+    const { results, items } = splitExpandedLineItems(records, 'to_Item');
+    return toMcpResult({ results, items });
+  }
+  return toMcpResult({ results: records });
 }
 
 async function getPurchaseOrder(args = {}) {
@@ -141,11 +178,12 @@ async function getPurchaseOrder(args = {}) {
   } = args;
 
   const base = '/sap/opu/odata4/sap/api_purchaseorder_2/srvd_a2x/sap/purchaseorder/0001';
+  const PO_ITEM_EXPAND = '_PurchaseOrderItem';
   const expandParts = [];
-  if (includeItems) expandParts.push('to_PurchaseOrderItem');
-  if (includeSchedule) expandParts.push('to_PurchaseOrderScheduleLine');
-  if (includePricing) expandParts.push('to_PurOrderItemPricingElement');
-  if (includeNotes) expandParts.push('to_PurchaseOrderNote');
+  if (includeItems) expandParts.push(PO_ITEM_EXPAND);
+  if (includeSchedule) expandParts.push('_PurchaseOrderScheduleLine');
+  if (includePricing) expandParts.push('_PurOrderItemPricingElement');
+  if (includeNotes) expandParts.push('_PurchaseOrderNote');
   const $expand = expandParts.length ? expandParts.join(',') : undefined;
 
   let url;
@@ -161,7 +199,22 @@ async function getPurchaseOrder(args = {}) {
 
   const resp = await sapGet(url);
   if (!resp.ok) return toMcpError(JSON.stringify(resp.error));
-  return toMcpResult({ results: extractResults(resp.data) });
+  const records = extractResults(resp.data);
+
+  if (includeItems) {
+    let { results, items } = splitExpandedLineItems(records, PO_ITEM_EXPAND);
+    if (!items.length && purchaseOrder) {
+      const itemUrl = makeUrl(`${base}/PurchaseOrderItem`, {
+        $filter: `PurchaseOrder eq '${purchaseOrder}'`,
+        $format: 'json',
+        sapClient: false,
+      });
+      const itemResp = await sapGet(itemUrl);
+      if (itemResp.ok) items = extractResults(itemResp.data);
+    }
+    return toMcpResult({ results, items });
+  }
+  return toMcpResult({ results: records });
 }
 
 async function getMaterialStock(args = {}) {
@@ -192,10 +245,11 @@ async function getMaterialStock(args = {}) {
 async function getSupplierInvoice(args = {}) {
   const { invoice, fiscalYear, includeLines = false } = args;
   const base = '/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV';
+  const year = fiscalYear || String(new Date().getFullYear());
 
   let headerUrl;
-  if (invoice && fiscalYear) {
-    headerUrl = `${base}/A_SupplierInvoice(SupplierInvoice='${invoice}',FiscalYear='${fiscalYear}')?$format=json&sap-client=${config.client}`;
+  if (invoice) {
+    headerUrl = `${base}/A_SupplierInvoice(SupplierInvoice='${invoice}',FiscalYear='${year}')?$format=json&sap-client=${config.client}`;
   } else {
     headerUrl = `${base}/A_SupplierInvoice?$top=10&$format=json&sap-client=${config.client}`;
   }
@@ -207,8 +261,8 @@ async function getSupplierInvoice(args = {}) {
     header: extractResults(header.data),
   };
 
-  if (includeLines && invoice && fiscalYear) {
-    const lineUrl = `${base}/A_SuplrInvcItemPurOrdRef?$filter=SupplierInvoice eq '${invoice}' and FiscalYear eq '${fiscalYear}'&$format=json&sap-client=${config.client}`;
+  if (includeLines && invoice) {
+    const lineUrl = `${base}/A_SuplrInvcItemPurOrdRef?$filter=SupplierInvoice eq '${invoice}' and FiscalYear eq '${year}'&$format=json&sap-client=${config.client}`;
     const lines = await sapGet(lineUrl);
     result.lines = lines.ok ? extractResults(lines.data) : lines.error;
   }
@@ -624,6 +678,8 @@ async function getMasterData(args = {}) {
 }
 
 module.exports = {
+  splitExpandedLineItems,
+  extractResults,
   healthCheck,
   getProduct,
   getBusinessPartner,

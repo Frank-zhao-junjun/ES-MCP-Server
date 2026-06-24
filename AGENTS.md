@@ -4,10 +4,32 @@
 
 构建面向 SAP S/4HANA Cloud 的 MCP Server，暴露 20 个工具供 AI Agent 通过 HTTP 或 stdio 调用（8 个 MVP + 5 个 Phase 2 基础设施 + 7 个 Phase 3 被阻塞工具）。
 
-- 仓库根目录：`/workspace/projects`
+- 仓库根目录：`E:\00 - 中数通ES环境\ES-MCP-Server`（GitHub: Frank-zhao-junjun/ES-MCP-Server）
+- 旧目录 `ES 接口` 已归档，勿在此重复实现
 - 源码目录：`MCP Server/`
 - 文档目录：`docs/`
 - 探测脚本：`scripts/`
+
+## 开发流程（SDD Workflow）
+
+**所有 Feature / User Story / Bugfix 必须遵循 6 阶段门禁流程：**
+
+```
+US → ① Unit Spec → ② PRD → ③ Testing Case → ④ Coding → ⑤ Unit Test → ⑥ E2E
+```
+
+**关键约束：** ③ 测试用例必须先于 ④ 编码（TDD）；④ ⑤ 使用 multi-agent dispatch 并行执行。
+
+流程细节与 Red Flags 见 `.claude/skills/sdd-workflow/SKILL.md`，或通过 `/sdd-workflow` 调用。
+
+| 阶段 | 负责 Skill | 阶段间门禁 |
+|------|-----------|-----------|
+| ① Unit Spec | superpowers:writing-plans | 所有 Unit 边界清晰 |
+| ② PRD | superpowers:writing-plans | PRD 覆盖所有 Unit |
+| ③ Testing Case | superpowers:test-driven-development | 用例覆盖 normal/error/boundary |
+| ④ Coding | superpowers:subagent-driven-development | 每 Unit agent diff 已 apply |
+| ⑤ Unit Test | superpowers:verification-before-completion | npm test 全绿 |
+| ⑥ E2E | gstack:qa | checklist 全部打勾 |
 
 ## 目录结构
 
@@ -52,11 +74,14 @@ HTTP 模式监听 `MCP_BIND_ADDRESS:MCP_PORT`（默认 `127.0.0.1:3000`），MCP
 | `MCP_REQUIRE_API_KEY` | `false` | 是否启用 Bearer Token 鉴权 |
 | `MCP_API_KEY` | `change-me` | API Key（启用鉴权时必填） |
 
-`user.txt` 格式：
+`user.txt` 格式（仓库根目录）：
 
 ```
-S00222941xxx:YourPassword
+接口调用的通信用户：EPC_USER
+密码：<密码>
 ```
+
+或英文：`User Name:` / `Password:` / `PasswordAlt:`
 
 ## 工具清单
 
@@ -131,3 +156,18 @@ curl -X POST http://127.0.0.1:3000/mcp \
 - 工具 handler 统一返回 `{ content: [{ type: 'text', text: JSON.stringify(result) }], isError?: boolean }`。
 - SAP HTTP 调用优先尝试所有凭证组合，自动处理 V2 (`d.results`) 与 V4 (`value`) 响应结构。
 - 不要提交 `.env`、`user.txt`、`node_modules`。
+- **所有 Feature/Bugfix 开发必须遵循上方「开发流程（SDD Workflow）」6 阶段门禁。**
+
+### 强制引用（开发前必读）
+
+动手改代码前，Agent **必须**先打开并对照以下文档；未引用对应 Unit Spec / Test Case 不得进入 ④ Coding：
+
+| 文档 | 用途 | 阶段 |
+|------|------|------|
+| [`.claude/skills/sdd-workflow/SKILL.md`](.claude/skills/sdd-workflow/SKILL.md) | 6 阶段门禁、Red Flags、产出物路径 | 全程 |
+| [`docs/MVP需求说明.md`](docs/MVP需求说明.md) | MVP 权威需求、FR/NFR、§9 验收矩阵 | ② PRD / ⑥ E2E |
+| [`docs/specs/units/`](docs/specs/units/) | 每个 Unit 的接口契约与验收标准 | ① Unit Spec |
+| [`docs/tests/`](docs/tests/) | 测试用例（**必须先于编码**） | ③ Testing Case |
+| [`docs/superpowers/plans/`](docs/superpowers/plans/) | 实施计划与任务拆解 | ④ ⑤ dispatch 前 |
+
+**冲突裁决：** MVP 范围内，`docs/MVP需求说明.md` 优先于《MCP-Server开发指南》及其他文档。

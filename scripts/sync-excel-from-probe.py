@@ -4,7 +4,7 @@ import json
 import openpyxl
 from pathlib import Path
 
-ROOT = Path(r"E:\00 - 中数通ES环境\ES 接口")
+ROOT = Path(__file__).resolve().parent.parent
 PROBE = ROOT / "Probe_Latest.json"
 XLSX = ROOT / "ES接口清单.xlsx"
 

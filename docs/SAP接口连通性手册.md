@@ -11,7 +11,7 @@
 ### 用法
 
 ```powershell
-cd "E:\00 - 中数通ES环境\ES 接口"
+cd "E:\00 - 中数通ES环境\ES-MCP-Server"
 node scripts/probe-sap-connectivity.js
 ```
 

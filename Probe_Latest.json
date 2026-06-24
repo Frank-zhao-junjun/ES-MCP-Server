@@ -240,7 +240,7 @@
     "鉴权": "Basic Auth + sap-client",
     "连通性": "OK(200)",
     "备注": "列表；V4需SAP_COM_0054; user=EPC_USER",
-    "读取示例": "GET https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SupplierInvoice?$top=50&$format=json&sap-client=100"
+    "读取示例": "/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SupplierInvoice?$top=50&$format=json&sap-client={CLIENT}"
   },
   {
     "分类": "EPC应付",
@@ -252,7 +252,7 @@
     "鉴权": "Basic Auth + sap-client",
     "连通性": "OK(200)",
     "备注": "示例5105600101/2025; user=EPC_USER",
-    "读取示例": "GET https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SupplierInvoice(SupplierInvoice='{Invoice}',FiscalYear='{Year}')?$format=json&sap-client=100"
+    "读取示例": "/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SupplierInvoice(SupplierInvoice='{Invoice}',FiscalYear='{Year}')?$format=json&sap-client={CLIENT}"
   },
   {
     "分类": "EPC应付",
@@ -264,7 +264,7 @@
     "鉴权": "Basic Auth + sap-client",
     "连通性": "OK(200)",
     "备注": "实体A_SuplrInvcItemPurOrdRef; user=EPC_USER",
-    "读取示例": "GET https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SuplrInvcItemPurOrdRef?$filter=SupplierInvoice eq '{Invoice}' and FiscalYear eq '{Year}'&$format=json&sap-client=100"
+    "读取示例": "/sap/opu/odata/sap/API_SUPPLIERINVOICE_PROCESS_SRV/A_SuplrInvcItemPurOrdRef?$filter=SupplierInvoice eq '{Invoice}' and FiscalYear eq '2025'&$format=json&sap-client={CLIENT}"
   },
   {
     "分类": "EPC应付",
@@ -364,5 +364,104 @@
     "鉴权": "Basic Auth + sap-client",
     "连通性": "FAIL(403)",
     "备注": "需开通 Communication Arrangement"
+  },
+  {
+    "分类": "采购",
+    "通信场景": "SAP_COM_0102",
+    "接口名称": "采购申请 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition/srvd_a2x/sap/purchaserequisition/0001/PurchaseRequisition?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(403)",
+    "备注": "需开通SAP_COM_0102"
+  },
+  {
+    "分类": "采购",
+    "通信场景": "SAP_COM_0102",
+    "接口名称": "采购申请行 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_purchaserequisition/srvd_a2x/sap/purchaserequisition/0001/PurchaseRequisitionItem?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(403)",
+    "备注": "需开通SAP_COM_0102"
+  },
+  {
+    "分类": "采购",
+    "通信场景": "SAP_COM_0103",
+    "接口名称": "计划协议 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_schedagreement/srvd_a2x/sap/schedagreement/0001/A_SchedgAgrmt?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(403)",
+    "备注": "需开通SAP_COM_0103"
+  },
+  {
+    "分类": "采购",
+    "通信场景": "SAP_COM_0103",
+    "接口名称": "计划协议行 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_schedagreement/srvd_a2x/sap/schedagreement/0001/A_SchedgAgrmtItem?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(403)",
+    "备注": "需开通SAP_COM_0103"
+  },
+  {
+    "分类": "销售",
+    "通信场景": "SAP_COM_0119",
+    "接口名称": "销售合同 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_salescontract/srvd_a2x/sap/salescontract/0001/SalesContract?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "OK(200)",
+    "备注": "需开通SAP_COM_0119; user=EPC_USER"
+  },
+  {
+    "分类": "销售",
+    "通信场景": "SAP_COM_0119",
+    "接口名称": "销售合同行 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_salescontract/srvd_a2x/sap/salescontract/0001/SalesContractItem?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "OK(200)",
+    "备注": "需开通SAP_COM_0119; user=EPC_USER"
+  },
+  {
+    "分类": "生产",
+    "通信场景": "API_BILL_OF_MATERIAL_SRV",
+    "接口名称": "BOM行项目 V2",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV;v=0002/A_BillOfMaterialItem?$top=1&$format=json&sap-client=100",
+    "协议": "OData V2/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(404)",
+    "备注": "需开通BOM服务"
+  },
+  {
+    "分类": "生产",
+    "通信场景": "API_BILL_OF_MATERIAL_SRV",
+    "接口名称": "BOM抬头 V2",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata/sap/API_BILL_OF_MATERIAL_SRV;v=0002/A_BillOfMaterial?$top=1&$format=json&sap-client=100",
+    "协议": "OData V2/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(404)",
+    "备注": "需开通BOM服务"
+  },
+  {
+    "分类": "库存",
+    "通信场景": "SAP_COM_0225",
+    "接口名称": "预留 V4",
+    "方法": "GET",
+    "接口地址": "https://my200967-api.s4hana.sapcloud.cn/sap/opu/odata4/sap/api_reservationdocument/srvd_a2x/sap/reservationdocument/0001/ReservationDocumentItem?$top=1&$format=json&sap-client=100",
+    "协议": "OData V4/JSON",
+    "鉴权": "Basic Auth + sap-client",
+    "连通性": "FAIL(403)",
+    "备注": "需开通预留服务"
   }
 ]

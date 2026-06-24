@@ -42,6 +42,10 @@ function getCredentials() {
 }
 
 function formatSapError(status, body) {
+  const message = typeof body === 'string' ? body.slice(0, 500) : JSON.stringify(body).slice(0, 500);
+  if (status === 400) {
+    return { error: 'SAP_BAD_REQUEST', message };
+  }
   if (status === 401) {
     return { error: 'SAP_AUTH_FAILED', message: 'SAP rejected credentials; check user.txt' };
   }
@@ -51,7 +55,14 @@ function formatSapError(status, body) {
   if (status === 404) {
     return { error: 'SAP_NOT_FOUND', message: 'Service path or entity not found' };
   }
-  return { error: 'SAP_ERROR', status, message: typeof body === 'string' ? body.slice(0, 500) : JSON.stringify(body).slice(0, 500) };
+  if (status === 502 || status === 503) {
+    return { error: 'SAP_SERVICE_UNAVAILABLE', message };
+  }
+  return { error: 'SAP_ERROR', status, message };
+}
+
+function isSapDebugEnabled() {
+  return String(process.env.SAP_DEBUG).toLowerCase() === 'true';
 }
 
 const cache = new Map();
@@ -101,6 +112,11 @@ async function sapGet(url, options = {}) {
   const accept = options.accept || 'application/json';
   let lastStatus = 0;
   let lastText = '';
+  const sapDebug = isSapDebugEnabled();
+
+  if (sapDebug) {
+    console.error(`[SAP_DEBUG] GET ${fullUrl}`);
+  }
 
   for (const user of users) {
     for (const password of passwords) {
@@ -119,6 +135,10 @@ async function sapGet(url, options = {}) {
         const text = await resp.text();
         lastStatus = resp.status;
         lastText = text;
+
+        if (sapDebug) {
+          console.error(`[SAP_DEBUG] status=${resp.status}`);
+        }
 
         if (resp.ok) {
           let data;
@@ -145,8 +165,16 @@ async function sapGet(url, options = {}) {
     }
   }
 
-  const result = { status: lastStatus, ok: false, text: lastText, error: formatSapError(lastStatus, lastText) };
-  return result;
+  if (lastStatus === 0) {
+    return {
+      status: 0,
+      ok: false,
+      text: lastText,
+      error: { error: 'NETWORK_ERROR', message: lastText || 'Network request failed' },
+    };
+  }
+
+  return { status: lastStatus, ok: false, text: lastText, error: formatSapError(lastStatus, lastText) };
 }
 
 /**

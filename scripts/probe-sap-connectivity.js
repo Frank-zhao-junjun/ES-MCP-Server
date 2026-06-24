@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Quick SAP connectivity probe for ES 接口 project.
+ * Quick SAP connectivity probe for ES-MCP-Server (repo root).
  * Usage: node scripts/probe-sap-connectivity.js
  */
 const fs = require('fs');

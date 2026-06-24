@@ -78,7 +78,7 @@ Reference: [MCP-Server开发指南.md](MCP-Server开发指南.md) · [SAP接口�
 
 **Do:** Tool `{ purchaseOrder?, includeItems?, includeSchedule?, includePricing?, includeNotes? }` → `api_purchaseorder_2` entities.
 
-**Done when:** Header-only and header+items for a known PO (e.g. `4500000023`) work.
+**Done when:** Header-only and header+items for a known PO (e.g. `4500000000`) work.
 
 ---
 

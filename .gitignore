@@ -15,7 +15,9 @@ _mcp_stderr.txt
 .DS_Store
 Thumbs.db
 *.swp
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/skills/**
 
 # Preview files
 .preview
