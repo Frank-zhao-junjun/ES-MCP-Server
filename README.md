@@ -64,10 +64,11 @@ US → ① Unit Spec → ② PRD → ③ Test Case → ④ Coding → ⑤ Unit T
 |------|------|
 | MCP Server 源码 | ✅ `MCP Server/` |
 | MCP 工具 | ✅ 20 个已注册（8 MVP + 5 增强 + 7 待 SAP 开通） |
-| SAP 连通性探测 | ✅ 42 端点，OK 24 / 403 18 |
+| SAP 连通性探测 | ✅ 42 端点，OK **26** / 403 **14** / 404 **2** |
 | 差距修复 B1–B4 | ✅ 编码完成（items 拆分、错误码、fiscalYear、可观测性） |
 | 单元测试 | ✅ `pnpm test` **19/19** |
-| MVP §9 E2E | ✅ `pnpm test:e2e` **21/21**（2026-06-23） |
+| MVP §9 E2E | ✅ `pnpm test:e2e` **21/21** |
+| **MVP 交付** | ✅ **已交付**（[`b4b7143`](https://github.com/Frank-zhao-junjun/ES-MCP-Server/commit/b4b7143)） |
 
 ## 快速开始
 
